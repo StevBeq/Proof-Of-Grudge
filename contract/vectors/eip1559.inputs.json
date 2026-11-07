@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "chain_id": 11155111,
+  "data": "0x",
+  "access_list": [],
+  "cases": [
+    {
+      "name": "zero-nonce-nonzero-value",
+      "to": "0x1111111111111111111111111111111111111111",
+      "nonce": "0",
+      "value_wei": "1000000000000000000",
+      "max_fee_per_gas": "30000000000",
+      "max_priority_fee_per_gas": "1000000000",
+      "gas_limit": "21000"
+    },
+    {
+      "name": "zero-nonce-zero-value",
+      "to": "0x0000000000000000000000000000000000000001",
+      "nonce": "0",
+      "value_wei": "0",
+      "max_fee_per_gas": "2",
+      "max_priority_fee_per_gas": "1",
+      "gas_limit": "21000"
+    },
+    {
+      "name": "max-u128-long-list",
+      "to": "0x00112233445566778899aabbccddeeff00112233",
+      "nonce": "128",
+      "value_wei": "340282366920938463463374607431768211455",
+      "max_fee_per_gas": "340282366920938463463374607431768211455",
+      "max_priority_fee_per_gas": "340282366920938463463374607431768211455",
+      "gas_limit": "21000"
+    }
+  ]
+}

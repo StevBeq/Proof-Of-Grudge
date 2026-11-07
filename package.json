@@ -1,0 +1,25 @@
+{
+  "name": "proof-of-grudge",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "repository": "https://github.com/StevBeq/Proof-Of-Grudge",
+  "engines": { "node": ">=22.15.1" },
+  "workspaces": ["contract", "scripts", "web"],
+  "scripts": {
+    "dev": "npm --workspace proof-of-grudge-web run dev",
+    "demo": "npm --workspace @proof-of-grudge/scripts run demo --",
+    "cli": "npm --workspace @proof-of-grudge/scripts run cli --",
+    "derive": "npm --workspace @proof-of-grudge/scripts run derive --",
+    "vectors": "npm --workspace proof-of-grudge-rlp-vectors run vectors",
+    "vectors:check": "npm --workspace proof-of-grudge-rlp-vectors run vectors:check",
+    "test:contract": "cargo test --manifest-path contract/Cargo.toml -- --nocapture",
+    "test:cli": "npm --workspace @proof-of-grudge/scripts run test",
+    "test:web": "npm --workspace proof-of-grudge-web run test",
+    "test": "npm run vectors:check && npm run test:contract && npm run test:cli && npm run test:web",
+    "typecheck": "npm --workspace @proof-of-grudge/scripts run typecheck && npm --workspace proof-of-grudge-web run typecheck",
+    "build:contract": "cargo near build non-reproducible-wasm --manifest-path contract/Cargo.toml",
+    "build:web": "npm --workspace proof-of-grudge-web run build",
+    "build": "npm run build:contract && npm run build:web"
+  }
+}

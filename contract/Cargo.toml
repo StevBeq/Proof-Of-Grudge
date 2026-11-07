@@ -1,0 +1,39 @@
+[package]
+name = "proof-of-grudge"
+description = "Adversarial inheritance with destination-locked Sepolia releases"
+version = "0.1.0"
+edition = "2024"
+resolver = "3"
+rust-version = "1.95"
+repository = "https://github.com/StevBeq/Proof-Of-Grudge"
+license = "MIT"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+# Derived from cargo-near 0.23.0's official embedded template. No generated
+# deployment workflows, nested git repository, or automatic initial commit.
+[package.metadata.near.reproducible_build]
+image = "sourcescan/cargo-near:0.22.0-rust-1.99.1"
+image_digest = "sha256:c9655eaf7436b90c87ea8b25739f91063032c5c30ba24cfeafe72c142943b5bb"
+passed_env = []
+container_build_command = ["cargo", "near", "build", "non-reproducible-wasm", "--locked"]
+
+[dependencies]
+near-sdk = "=5.30.1"
+near-mpc-contract-interface = { git = "https://github.com/near/mpc", rev = "d0fc87b19e2643299e7becdd7d9611afcd5d5a78", default-features = false, features = ["call-args"] }
+
+[dev-dependencies]
+near-sdk = { version = "=5.30.1", features = ["unit-testing"] }
+
+[profile.release]
+codegen-units = 1
+opt-level = "z"
+lto = true
+debug = false
+panic = "abort"
+overflow-checks = true
+
+[lints.rust.unexpected_cfgs]
+level = "warn"
+check-cfg = ['cfg(near)']
