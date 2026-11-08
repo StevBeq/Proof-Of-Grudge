@@ -1,5 +1,132 @@
 {
   "network": "testnet",
   "verified": false,
-  "proofs": []
+  "proofs": [
+    {
+      "label": "owner: deposit_vault",
+      "nearTxHash": "GKVwBDhqBWcBgnEDvfxnYtRRh8UBBZTfUpQSLz1vAAvA",
+      "url": "https://testnet.nearblocks.io/txns/GKVwBDhqBWcBgnEDvfxnYtRRh8UBBZTfUpQSLz1vAAvA",
+      "createdAt": "2026-11-08T17:12:33.855Z"
+    },
+    {
+      "label": "heir: initiate_claim",
+      "nearTxHash": "HR41gaTCvKzQrSR8RUYqYHvYNe19ztGFZpqvie7MRAfk",
+      "url": "https://testnet.nearblocks.io/txns/HR41gaTCvKzQrSR8RUYqYHvYNe19ztGFZpqvie7MRAfk",
+      "createdAt": "2026-11-08T17:13:32.223Z"
+    },
+    {
+      "label": "owner: check_in",
+      "nearTxHash": "AsWCkxMmiC7FGZyyYwz1WzDr9CadRwjwMv1KMVVhwVdE",
+      "url": "https://testnet.nearblocks.io/txns/AsWCkxMmiC7FGZyyYwz1WzDr9CadRwjwMv1KMVVhwVdE",
+      "createdAt": "2026-11-08T17:13:55.060Z"
+    },
+    {
+      "label": "owner: withdraw_payout",
+      "nearTxHash": "2BXG1iSt7m16wtd1gjfDezRZkQAzQ4Gk6XgmJsuss7WL",
+      "url": "https://testnet.nearblocks.io/txns/2BXG1iSt7m16wtd1gjfDezRZkQAzQ4Gk6XgmJsuss7WL",
+      "createdAt": "2026-11-08T17:14:22.314Z"
+    },
+    {
+      "label": "heir: initiate_claim",
+      "nearTxHash": "7h6HHSRWJkYWCNLDU4ynSA1DaumtY8pn63A7QW2p69ot",
+      "url": "https://testnet.nearblocks.io/txns/7h6HHSRWJkYWCNLDU4ynSA1DaumtY8pn63A7QW2p69ot",
+      "createdAt": "2026-11-08T17:15:30.991Z"
+    },
+    {
+      "label": "rival: challenge_claim",
+      "nearTxHash": "DAExvAUeG5t1nYNWR4wKrCoGnzYmKiAWoVtKvU74Cfdz",
+      "url": "https://testnet.nearblocks.io/txns/DAExvAUeG5t1nYNWR4wKrCoGnzYmKiAWoVtKvU74Cfdz",
+      "createdAt": "2026-11-08T17:15:54.015Z"
+    },
+    {
+      "label": "owner: check_in",
+      "nearTxHash": "BHAKp2J4rQkwvRi4b7LF5vZhdaW9c3a96w1SYUT3she4",
+      "url": "https://testnet.nearblocks.io/txns/BHAKp2J4rQkwvRi4b7LF5vZhdaW9c3a96w1SYUT3she4",
+      "createdAt": "2026-11-08T17:16:17.116Z"
+    },
+    {
+      "label": "rival: withdraw_payout",
+      "nearTxHash": "ANGSds3oyHiqdFW5ZQLCDzAwRsLaUKBbD9EuYdnAcfBh",
+      "url": "https://testnet.nearblocks.io/txns/ANGSds3oyHiqdFW5ZQLCDzAwRsLaUKBbD9EuYdnAcfBh",
+      "createdAt": "2026-11-08T17:16:44.760Z"
+    },
+    {
+      "label": "heir: initiate_claim",
+      "nearTxHash": "DNBgGmEAJLEgApjJ5CQ5gyhzvyShNhYwwu3FrNpsgXxc",
+      "url": "https://testnet.nearblocks.io/txns/DNBgGmEAJLEgApjJ5CQ5gyhzvyShNhYwwu3FrNpsgXxc",
+      "createdAt": "2026-11-08T17:17:53.756Z"
+    },
+    {
+      "label": "rival: challenge_claim",
+      "nearTxHash": "6qZ9Row1Uzez2pQed55NbhNDZ9hYgN5iiJBz4xiMu5mv",
+      "url": "https://testnet.nearblocks.io/txns/6qZ9Row1Uzez2pQed55NbhNDZ9hYgN5iiJBz4xiMu5mv",
+      "createdAt": "2026-11-08T17:18:16.856Z"
+    },
+    {
+      "label": "heir: finalize_inheritance",
+      "nearTxHash": "7mmEXzUxrWCFuZw3tA876ucV8F99bkueRLyFtfCv4TVr",
+      "url": "https://testnet.nearblocks.io/txns/7mmEXzUxrWCFuZw3tA876ucV8F99bkueRLyFtfCv4TVr",
+      "createdAt": "2026-11-08T17:21:18.608Z"
+    },
+    {
+      "label": "heir: withdraw_payout",
+      "nearTxHash": "5Mdjx8gRtCoDvzaH4tukgpCdrhPr5qACw2enupU2DfSQ",
+      "url": "https://testnet.nearblocks.io/txns/5Mdjx8gRtCoDvzaH4tukgpCdrhPr5qACw2enupU2DfSQ",
+      "createdAt": "2026-11-08T17:21:45.856Z"
+    },
+    {
+      "label": "owner: deposit_vault",
+      "nearTxHash": "GVL9CmWpE1MsK59xjGobhmtfDMK9YudrV8qFezXXfZU6",
+      "url": "https://testnet.nearblocks.io/txns/GVL9CmWpE1MsK59xjGobhmtfDMK9YudrV8qFezXXfZU6",
+      "createdAt": "2026-11-08T17:25:22.396Z"
+    },
+    {
+      "label": "owner: owner_withdraw_near",
+      "nearTxHash": "CKA2wDvPfs6tmRoJrKpFfgz8GgHMfBTpTBdxbR6GFApk",
+      "url": "https://testnet.nearblocks.io/txns/CKA2wDvPfs6tmRoJrKpFfgz8GgHMfBTpTBdxbR6GFApk",
+      "createdAt": "2026-11-08T17:26:09.219Z"
+    },
+    {
+      "label": "owner: withdraw_payout",
+      "nearTxHash": "J5y1nike4WED68dFTnFwZ6auZg95a1FhVTjnXC8s1TMQ",
+      "url": "https://testnet.nearblocks.io/txns/J5y1nike4WED68dFTnFwZ6auZg95a1FhVTjnXC8s1TMQ",
+      "createdAt": "2026-11-08T17:27:11.100Z"
+    },
+    {
+      "label": "owner: deposit_vault",
+      "nearTxHash": "E9bzGRoTq3LN2E3cRkds64cqeDELcznrZkjWPCRUpfp9",
+      "url": "https://testnet.nearblocks.io/txns/E9bzGRoTq3LN2E3cRkds64cqeDELcznrZkjWPCRUpfp9",
+      "createdAt": "2026-11-08T17:27:26.049Z"
+    },
+    {
+      "label": "heir: initiate_claim",
+      "nearTxHash": "F1JyL1vfhznvE38Ke6E95gc63TiZ8HfY5cKcpmfqhQeT",
+      "url": "https://testnet.nearblocks.io/txns/F1JyL1vfhznvE38Ke6E95gc63TiZ8HfY5cKcpmfqhQeT",
+      "createdAt": "2026-11-08T17:27:40.617Z"
+    },
+    {
+      "label": "heir: finalize_inheritance",
+      "nearTxHash": "E7e95JCRck5bHHPAUcYZKrKnmcbBLP3yyhdnm2hnsJ9V",
+      "url": "https://testnet.nearblocks.io/txns/E7e95JCRck5bHHPAUcYZKrKnmcbBLP3yyhdnm2hnsJ9V",
+      "createdAt": "2026-11-08T17:29:16.172Z"
+    },
+    {
+      "label": "heir: withdraw_payout",
+      "nearTxHash": "6KqVjxQRseVhJ2jLMRk6kv9CNhcbm6qv7Pk7obQrQU78",
+      "url": "https://testnet.nearblocks.io/txns/6KqVjxQRseVhJ2jLMRk6kv9CNhcbm6qv7Pk7obQrQU78",
+      "createdAt": "2026-11-08T17:29:22.858Z"
+    },
+    {
+      "label": "Deploy and init: Spite vault",
+      "nearTxHash": "AkyXh4z9HBYNSYezLWg8cvj8WQLyt5xawZj7UAqNy57B",
+      "url": "https://testnet.nearblocks.io/txns/AkyXh4z9HBYNSYezLWg8cvj8WQLyt5xawZj7UAqNy57B",
+      "createdAt": "2026-11-08T17:29:58.421Z"
+    },
+    {
+      "label": "Deploy and init: Uncontested vault",
+      "nearTxHash": "BdCDDKijLC86hxvFhvzG2iRyFEGeS9DJsAmuCSbse1Kn",
+      "url": "https://testnet.nearblocks.io/txns/BdCDDKijLC86hxvFhvzG2iRyFEGeS9DJsAmuCSbse1Kn",
+      "createdAt": "2026-11-08T17:29:58.428Z"
+    }
+  ]
 }

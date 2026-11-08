@@ -7,10 +7,35 @@ import { publicKeyToAddress } from 'viem/accounts';
 import { main } from './cli.js';
 import { addTime, parseOptions, safeMessage, SafeError, scenarios, testnetAccount, uint } from './safety.js';
 import { assertEthRequestAllowed, fixture, OfflineVault, parseEthCallback, parseReleaseArgs, parseVault, type EthRelease, type ReleaseArgs } from './model.js';
-import { crossCheck, derivedAddress, mpcSignature, signedRelease, unsigned } from './ethereum.js';
+import { crossCheck, derivedAddress, mpcSignature, prepareRelease, signedRelease, unsigned, type SepoliaClient } from './ethereum.js';
 import { runScenario } from './scenarios.js';
 import { parseProofFile, proof } from './proofs.js';
 import { NearVault } from './near.js';
+
+test('Sepolia preflight explains an unfunded sender before attempting gas estimation', async () => {
+  let estimates = 0;
+  const client = { getChainId: async () => 11155111, getTransactionCount: async () => 0,
+    estimateFeesPerGas: async () => ({ maxFeePerGas: 2n, maxPriorityFeePerGas: 1n }),
+    getBalance: async () => 0n, estimateGas: async () => { estimates++; throw new Error('RPC details must not leak'); },
+  } as unknown as SepoliaClient;
+  await assert.rejects(prepareRelease(client, '0x1111111111111111111111111111111111111111',
+    '0x2222222222222222222222222222222222222222', '1'), error =>
+    error instanceof SafeError && /Fund the vault-derived sender/.test(error.message));
+  assert.equal(estimates, 0);
+});
+
+test('Sepolia preflight still requires the full padded gas reserve after the intrinsic check', async () => {
+  const sender = '0x1111111111111111111111111111111111111111';
+  const client = { getChainId: async () => 11155111, getTransactionCount: async () => 0,
+    estimateFeesPerGas: async () => ({ maxFeePerGas: 2n, maxPriorityFeePerGas: 1n }),
+    getBalance: async () => 42_001n, estimateGas: async () => 21_000n,
+  } as unknown as SepoliaClient;
+  await assert.rejects(prepareRelease(client, sender, sender, '1'), /maximum gas cost/);
+  client.getBalance = (async () => 50_401n) as SepoliaClient['getBalance'];
+  const args = await prepareRelease(client, sender, sender, '1');
+  assert.equal(args.gas_limit, '25200');
+  assert.equal(args.value_wei, '1');
+});
 
 test('v6 positional SDK provider makes one attempt and maps blockId to RPC block_id', async () => {
   const originalFetch = globalThis.fetch;

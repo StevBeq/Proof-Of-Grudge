@@ -16,7 +16,19 @@ The repository contains:
 - A CLI for offline scenarios and explicitly authorized Testnet/Sepolia operations.
 - An English/Indonesian web simulator with an optional read-only contract inspector.
 
-**Status:** development prototype, not audited. Frontend compilation has been checked locally; automated suites, clean-checkout reproducibility and live cross-chain execution remain unverified. No deployed vault, hosted demo or successful live transfer is claimed.
+**Status:** development prototype, not audited. Local tests pass (41 Rust unit tests, 1 viem golden-vector test, 33 CLI/setup tests and 32 web tests), and the WASM builds with embedded ABI. All four native NEAR payoff branches have executed on Testnet with successful payout receipts. MPC signing and the Sepolia ETH transfer are not yet verified; no hosted demo or production readiness is claimed. See [Testnet evidence and setup](scripts/TESTNET.md).
+
+### Live NEAR Testnet Evidence
+
+The contract is actively deployed on NEAR Testnet and verified across all four payoff branches:
+
+| Entity / Action | Identifier / Explorer Link |
+| --- | --- |
+| **Deployed Vault** | [`pog-mw835qrr-1c82b2-vault.testnet`](https://testnet.nearblocks.io/address/pog-mw835qrr-1c82b2-vault.testnet) |
+| **Deploy & Init Tx** | [AkyXh4z9HBYNSYezLWg8cvj8WQLyt5xawZj7UAqNy57B](https://testnet.nearblocks.io/txns/AkyXh4z9HBYNSYezLWg8cvj8WQLyt5xawZj7UAqNy57B) |
+| **Heir Payout (7 NEAR)** | [5Mdjx8gRtCoDvzaH4tukgpCdrhPr5qACw2enupU2DfSQ](https://testnet.nearblocks.io/txns/5Mdjx8gRtCoDvzaH4tukgpCdrhPr5qACw2enupU2DfSQ) |
+| **Rival Payout (2 NEAR)** | [ANGSds3oyHiqdFW5ZQLCDzAwRsLaUKBbD9EuYdnAcfBh](https://testnet.nearblocks.io/txns/ANGSds3oyHiqdFW5ZQLCDzAwRsLaUKBbD9EuYdnAcfBh) |
+| **Owner Payout (1 NEAR)** | [2BXG1iSt7m16wtd1gjfDezRZkQAzQ4Gk6XgmJsuss7WL](https://testnet.nearblocks.io/txns/2BXG1iSt7m16wtd1gjfDezRZkQAzQ4Gk6XgmJsuss7WL) |
 
 ## How NEAR is used
 
@@ -76,7 +88,7 @@ All commands below start from the repository root unless stated otherwise. Expec
 | Rust target | `wasm32-unknown-unknown` | WASM compilation |
 | cargo-near | 0.23.0 | Contract build |
 
-Native Rust tests also need a working host linker/C++ toolchain. **The offline CLI and web simulator need no wallet, account, API key or deployed contract.** Initial package installation requires internet; the simulator and CLI scenarios do not require chain access afterward.
+Native Rust tests also need a working host linker/C++ toolchain and, on Windows x86-64, NASM for the cryptography dependencies. **The offline CLI and web simulator need no wallet, account, API key or deployed contract.** Initial package installation requires internet; the simulator and CLI scenarios do not require chain access afterward.
 
 ### 1. Install dependencies
 
@@ -163,21 +175,25 @@ Individual suites are available as `npm run test:contract`, `npm run test:cli` a
 
 Authored coverage includes the four payoff branches, exact deadlines, role checks, bond accounting, transfer/signature callback mocks, shared Rust/TypeScript scenarios, and EIP-1559 byte comparison against viem. The golden-vector inputs cover zero nonce, zero value and large u128 amounts. A missing reference file is a test failure, not a skipped test. See [vector provenance](contract/vectors/README.md).
 
-**Validation boundary:** the test suites, golden comparison, contract WASM build and clean-clone workflow have not yet been run end to end. Native unit tests alone cannot establish receipt rollback, callback delivery, storage/gas sufficiency or deployed MPC compatibility. Sandbox and live Testnet/Sepolia validation remain necessary.
+**Observed validation:** the suites above and TypeScript checks pass locally. The optimized WASM is 196,109 bytes with SHA-256 `f254791a926540c2f4991387a72b35ba97120fed5cb57fdd80505318084b9592`; both Testnet deployments use this code hash. The build wrapper enables `near-sdk/unit-testing` only for native ABI generation, not for the on-chain WASM, and preserves ABI embedding. On Windows it can use the optional official portable NASM installation in `.rtk/tools/nasm-3.02`, otherwise NASM must be on PATH.
+
+A separate empty workspace installation using the generated lockfile and npm 11.6.2 completed with `npm ci`. This checks locked installation, not a full clean-clone build/test run.
+
+**Validation boundary:** clean-clone reproduction, Sandbox fault injection and live MPC/Sepolia execution remain unverified. Sandbox requires Linux or supported macOS; it was not run on this Windows host. Testnet payoff receipts establish the tested native transfers and callbacks, not every failure path or production gas/storage guarantee.
 
 ## Optional live integration
 
 Live execution requires a separately deployed and initialized vault, distinct funded NEAR Testnet actors, the chosen heir ETH address, and Sepolia test ETH at the vault-derived sender. No deployment is created by the local evaluation commands.
 
 - **Browser:** configure the public `VITE_VAULT_CONTRACT_ID` and trusted RPC URLs described in `web/.env.example`. Never put secrets in `VITE_*`; they are exposed to the browser.
-- **CLI:** configuration names are documented in `scripts/.env.example`. Values must be supplied through the inherited process environment; the CLI does not automatically load `.env` files.
+- **CLI:** configuration names are documented in `scripts/.env.example`. The regular CLI uses the inherited process environment and does not automatically load `.env` files. The separate `npm run testnet:local` setup wrapper creates dedicated test keys and loads its own ignored local configuration only when explicitly requested; see [setup instructions](scripts/TESTNET.md).
 - **Views:** require `--read-only --confirm-testnet`.
 - **NEAR writes:** require `--execute --confirm-testnet`.
 - **Sepolia broadcast:** additionally requires `--broadcast --confirm-sepolia`.
 
 The release workflow is **derive → fund → preview → request → verify → relay**. The derived ETH sender belongs to the vault's derivation path, not the heir's NEAR account. Transactions are locked to Sepolia chain **11155111**, the initialized recipient, empty calldata and an empty access list. A returned signature is not proof of a successful Ethereum transaction.
 
-The MPC request uses the official interface's `domain_id: 0`, `payload_v2` and `ethereum-1` path against `v1.signer-prod.testnet`. Its live gas/deposit requirements must be verified before execution. Full setup and commands are in the [CLI guide](scripts/README.md); the [contract guide](contract/README.md) explains the request format and accounting.
+The MPC request uses the official interface's `domain_id: 0`, `payload_v2` and `ethereum-1` path against `v1.signer-prod.testnet`. Read-only Testnet calls confirmed its Running state, domain-0 Secp256k1 key and configuration; successful signing with the pinned interface and deposit is still unverified. Full setup and commands are in the [CLI guide](scripts/README.md); the [contract guide](contract/README.md) explains the request format and accounting.
 
 ## Security and limitations
 

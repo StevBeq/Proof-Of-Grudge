@@ -88,12 +88,15 @@ export async function prepareRelease(client: SepoliaClient, sender: Address, to:
   await verifySepolia(client);
   const valueWei = uint(value);
   ensure(valueWei > 0n, 'Release value must be positive.');
-  const [nonce, fees, balance, gas] = await Promise.all([
+  const [nonce, fees, balance] = await Promise.all([
     bounded(() => client.getTransactionCount({ address: sender, blockTag: 'pending' })),
     bounded(() => client.estimateFeesPerGas({ type: 'eip1559' })),
     bounded(() => client.getBalance({ address: sender, blockTag: 'pending' })),
-    bounded(() => client.estimateGas({ account: sender, to, value: valueWei, data: '0x' })),
   ]);
+  // An unfunded sender may make eth_estimateGas fail before it can explain the
+  // missing funds. Check the intrinsic minimum first, then the padded estimate.
+  ensure(balance >= valueWei + 21_000n * fees.maxFeePerGas, 'Derived Sepolia address cannot cover release value plus the maximum gas cost. Fund the vault-derived sender with Sepolia test ETH.');
+  const gas = await bounded(() => client.estimateGas({ account: sender, to, value: valueWei, data: '0x' }));
   const gasLimit = (gas * 120n + 99n) / 100n;
   ensure(balance >= valueWei + gasLimit * fees.maxFeePerGas, 'Derived Sepolia address cannot cover release value plus the maximum gas cost.');
   return parseReleaseArgs({ nonce: nonce.toString(), value_wei: value,

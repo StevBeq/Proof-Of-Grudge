@@ -32,6 +32,17 @@ describe('canonical script evidence manifest', () => {
     expect(parsed.verified).toBe(false); expect(parsed.invalid).toBe(false);
     expect(parsed.proofs[0]).toMatchObject({ ...proof, network: 'near-testnet' });
   });
+  it('uses the same base58 hash length envelope as the CLI proof writer', () => {
+    for (const length of [32, 42, 43, 44]) {
+      const hash = '1'.repeat(length);
+      const entry = { ...proof, nearTxHash: hash, url: `https://testnet.nearblocks.io/txns/${hash}` };
+      const parsed = parseProofManifest({ network: 'testnet', verified: false, proofs: [entry] });
+      expect(parsed.invalid).toBe(false); expect(parsed.proofs).toHaveLength(1);
+    }
+    for (const length of [31, 45]) {
+      expect(safeProof({ url: `https://testnet.nearblocks.io/txns/${'1'.repeat(length)}` })).toBeNull();
+    }
+  });
   it('rejects legacy and non-testnet manifests', () => {
     expect(() => parseProofManifest({ generated_at: null, transactions: [] })).toThrow();
     expect(() => parseProofManifest({ network: 'mainnet', verified: false, proofs: [] })).toThrow();

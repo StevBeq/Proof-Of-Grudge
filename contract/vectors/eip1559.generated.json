@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "provenance": {
+    "library": "viem",
+    "version": "2.38.5",
+    "serializer": "serializeTransaction",
+    "generator": "vectors/generate.mjs"
+  },
+  "inputs": {
+    "schema_version": 1,
+    "chain_id": 11155111,
+    "data": "0x",
+    "access_list": [],
+    "cases": [
+      {
+        "name": "zero-nonce-nonzero-value",
+        "to": "0x1111111111111111111111111111111111111111",
+        "nonce": "0",
+        "value_wei": "1000000000000000000",
+        "max_fee_per_gas": "30000000000",
+        "max_priority_fee_per_gas": "1000000000",
+        "gas_limit": "21000"
+      },
+      {
+        "name": "zero-nonce-zero-value",
+        "to": "0x0000000000000000000000000000000000000001",
+        "nonce": "0",
+        "value_wei": "0",
+        "max_fee_per_gas": "2",
+        "max_priority_fee_per_gas": "1",
+        "gas_limit": "21000"
+      },
+      {
+        "name": "max-u128-long-list",
+        "to": "0x00112233445566778899aabbccddeeff00112233",
+        "nonce": "128",
+        "value_wei": "340282366920938463463374607431768211455",
+        "max_fee_per_gas": "340282366920938463463374607431768211455",
+        "max_priority_fee_per_gas": "340282366920938463463374607431768211455",
+        "gas_limit": "21000"
+      }
+    ]
+  },
+  "vectors": [
+    {
+      "name": "zero-nonce-nonzero-value",
+      "unsigned_serialized": "0x02f383aa36a780843b9aca008506fc23ac00825208941111111111111111111111111111111111111111880de0b6b3a764000080c0"
+    },
+    {
+      "name": "zero-nonce-zero-value",
+      "unsigned_serialized": "0x02e283aa36a78001028252089400000000000000000000000000000000000000018080c0"
+    },
+    {
+      "name": "max-u128-long-list",
+      "unsigned_serialized": "0x02f85383aa36a7818090ffffffffffffffffffffffffffffffff90ffffffffffffffffffffffffffffffff8252089400112233445566778899aabbccddeeff0011223390ffffffffffffffffffffffffffffffff80c0"
+    }
+  ]
+}

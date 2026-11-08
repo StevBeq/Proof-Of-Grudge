@@ -218,22 +218,22 @@ Only explicit runtime `--write-proofs` writes `web/public/proofs.json`. No file 
 
 This is schema documentation, not real evidence. Sepolia entries instead have `sepoliaTxHash` and a `https://sepolia.etherscan.io/tx/...` URL. Each entry identifies exactly one chain. Existing entries accumulate and duplicate hashes are skipped. An exclusive lock plus temporary-file/rename prevents partial overwrite. An incompatible existing schema (including a bare array) is rejected, never erased. `verified:false` is deliberate: these are RPC-observed links, not independent cryptographic consensus proofs. A successful NEAR request transaction does not prove a successful MPC signature; inspect its callback. Sepolia links are appended only after a successful receipt. Proof-file failure never triggers transaction replay.
 
-## Authored checks, not executed
+## Validation
 
-The following are **available for later human authorization**, not commands run by this implementation:
+These commands have been run successfully:
 
 ```sh
 npm --prefix scripts test
 npm --prefix scripts run typecheck
 ```
 
-Coverage authored: five scenario ledgers; strict heartbeat; exact bonds; once-only challenge; exact/late deadline; Finalized rejection; owner withdrawal credit versus transfer; default offline commands; flag conflicts; bounded integer validation; redacted error messages/stacks/causes; repeated-release request preflight; callback success/failure shapes and full failure credit; gas/fee boundaries; mock RPC network refusal; SDK one-attempt/blockId semantics; vault-predecessor MPC view; fixed EIP-1559 RLP bytes; locked chain/data/access list; derived public key conversion; tagged/untagged signature recovery, high-s normalization and invalid recovery IDs; proof-schema validation.
+Observed: **33 CLI/setup tests pass**, and the CLI TypeScript check passes. Coverage includes isolated local profiles, setup network gates, generated-recipient initialization, and five scenario ledgers; strict heartbeat; exact bonds; once-only challenge; exact/late deadline; Finalized rejection; owner withdrawal credit versus transfer; default offline commands; flag conflicts; bounded integer validation; redacted error messages/stacks/causes; repeated-release request preflight; callback success/failure shapes and full failure credit; gas/fee boundaries; mock RPC network refusal; SDK one-attempt/blockId semantics; vault-predecessor MPC view; fixed EIP-1559 RLP bytes; locked chain/data/access list; derived public key conversion; tagged/untagged signature recovery, high-s normalization and invalid recovery IDs; proof-schema validation.
 
-The RLP reference test is viem-backed and includes a fixed hand-audited byte vector. It is **not a claim that the Rust contract's golden-vector test has run or passed**. The contract/root owner should compare `eth_rlp.rs` against the same viem reference and coordinate shared root vectors. No root test vectors were modified in this scripts-only task.
+The CLI RLP reference test is viem-backed and includes a fixed hand-audited byte vector. Separately, the Rust contract's byte-for-byte golden comparison now passes against generated viem 2.38.5 vectors. All four native payoff branches and an Idle owner withdrawal have also run on Testnet; [evidence and setup commands](TESTNET.md) distinguish these from the still-unverified MPC/Sepolia release.
 
 ## Pinned dependencies and attribution
 
-Versions were fetched from npm registry metadata, not invented. Direct dependencies are pinned, but no lockfile was generated because install was prohibited; transitive resolution is not yet locked.
+Versions were fetched from npm registry metadata, not invented. Direct dependencies are pinned and the root `package-lock.json` records the installed workspace dependency graph.
 
 | Package | Version | Use |
 | --- | --- | --- |
@@ -278,12 +278,12 @@ Source URLs consulted:
 
 Verified v6 usage: `Account` and `KeyPairSigner` are top-level exports; `JsonRpcProvider` comes from `providers`, and `functionCall` from `transactions`. Construct `new Account(accountId, provider, signer)`, use positional provider view methods, and submit with `waitUntil:'FINAL', throwOnFailure:false`. No v7-only object-style provider calls or account retry options are used.
 
-AI assistance: authored with the Zed coding agent (GPT-6.1 Sol). No external project template was copied. The root README owner must also list these libraries and AI use for competition disclosure Q-005; this task intentionally did not edit the root README.
+AI assistance: developed with the Zed coding agent. Libraries, templates and AI assistance are disclosed in the root README under Q-005.
 
 ## Unverified boundaries
 
-- These sources/tests have not been executed or typechecked. No live NEAR or Sepolia RPC, MPC fee, deployed contract code, account key, balance, callback, or transaction was verified.
+- Local suites/typechecks and native Testnet payoffs pass. Read-only calls verified both network identities and the live MPC domain/configuration. Successful MPC signing, the signing deposit on the live deployment, and Sepolia broadcasting remain unverified.
 - The CLI targets the flat contract API supplied for this task, including pull-payment credits. A deployment with a different API fails validation rather than being guessed compatible.
 - Upstream `main` MPC source can change; consulted blob IDs include `primitives.rs` `80885af0a0774b62f7168f4a8354744a7e92e46c` and `sign.rs` `847225699f6dc8a84a89edae7e441694da087519`. Reconfirm the deployed version before authorizing funds.
-- An initialized, funded contract and manual testnet setup are external prerequisites. No deployment or key-deletion automation is provided.
+- `testnet-local.ts` provides separately gated testnet-only setup, faucet account creation and atomic deploy+init. Its `run` wrapper loads only its own generated local credentials, and only for explicit execution. The ordinary CLI still does not deploy or load dotenv. Neither tool deletes keys; deployment keys currently remain present.
 - External failures are intentionally summarized without raw exception messages/stacks. Use public explorer hashes and read-only inspection for diagnosis, not secret-bearing RPC logs.

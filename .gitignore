@@ -25,6 +25,7 @@ hasil.txt
 # (Hanya README.md yang di-track dan dipublikasikan)
 # ==============================================================================
 PROMPTS.md
+*prompt*.md
 data chat sebelumnya.md
 *.chat.md
 CAVEMAN.md
@@ -44,6 +45,8 @@ IMPLEMENTATION_PLAN.md
 06_IMPLEMENTATION_PLAN.md
 DESIGN.md
 05_DESIGN.md
+IMPLEMENTATION_STATUS.md
+web/IMPLEMENTATION.md
 
 # ==============================================================================
 # Rust / Cargo Build Artifacts
@@ -61,6 +64,8 @@ dist/
 build/
 .cache/
 npm-debug.log*
+/package-lock.damaged.backup.json
+/dependency-audit.local.json
 yarn-debug.log*
 yarn-error.log*
 

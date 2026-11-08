@@ -144,7 +144,28 @@ export function Cockpit({ c, locale, onScene }: Props) {
         </div>
       </div>
       <div className="event-panel">
-        {mode === 'local' ? <><h3>{c.log}</h3>{log.length === 0 ? <p className="caption">{c.logEmpty}</p> : <ol className="event-log" aria-label={c.log}>{log.map(entry => <li key={entry.id}><span className="mono log-time">{countdown(entry.at, 0n)}</span><span>{entry.kind === 'reset' ? c.resetLog : entry.kind === 'time' ? c.timeLog : <><span className={`actor-${entry.actor}`}>{entry.actor ? c[entry.actor] : ''}</span>: {entry.call ? actionLabel(c, entry.call) : ''}. {entry.error ? `${c.rejected}: ${errorLabel(c, entry.error)}` : entry.call === 'resolve_payout' ? (entry.success ? c.succeed : c.fail) : c.completed}</span>}</li>)}</ol>}</> : <><h3>{c.proofs}</h3>{live.proofError && <p role="alert">{c.proofError}</p>}{live.proofs.length ? <ul className="proof-list">{live.proofs.map(proof => <li key={proof.url}><a href={proof.url} target="_blank" rel="noopener noreferrer">{proof.network === 'near-testnet' ? c.nearProof : c.ethProof}<ArrowSquareOut size={18} aria-hidden="true" /><span className="mono break-anywhere">{proof.url.split('/').filter(Boolean).at(-1)}</span></a></li>)}</ul> : <p>{c.noProofs}</p>}<p className="caption">{c.proofHelp}</p></>}
+        {mode === 'local' ? <>
+          <h3>{c.log}</h3>
+          {log.length === 0 ? <p className="caption">{c.logEmpty}</p> : (
+            <ol className="event-log" aria-label={c.log}>
+              {log.map(entry => (
+                <li key={entry.id}>
+                  <span className="mono log-time">{countdown(entry.at, 0n)}</span>
+                  <span>
+                    {entry.kind === 'reset' ? c.resetLog : entry.kind === 'time' ? c.timeLog : <>
+                      <span className={`actor-${entry.actor}`}>{entry.actor ? c[entry.actor] : ''}</span>: {entry.call ? actionLabel(c, entry.call) : ''}. {entry.error ? `${c.rejected}: ${errorLabel(c, entry.error)}` : entry.call === 'resolve_payout' ? (entry.success ? c.succeed : c.fail) : c.completed}
+                    </>}
+                  </span>
+                </li>
+              ))}
+            </ol>
+          )}
+        </> : <>
+          <h3>{c.proofs}</h3>
+          {live.proofError && <p role="alert">{live.proofError}</p>}
+          {live.proofs.length ? <ul className="proof-list">{live.proofs.map(proof => <li key={proof.url}><a href={proof.url} target="_blank" rel="noopener noreferrer">{proof.network === 'near-testnet' ? c.nearProof : c.ethProof}<ArrowSquareOut size={18} aria-hidden="true" /><span className="mono break-anywhere">{proof.url.split('/').filter(Boolean).at(-1)}</span></a></li>)}</ul> : <p>{c.noProofs}</p>}
+          <p className="caption">{c.proofHelp}</p>
+        </>}
       </div>
     </div>
   </section>;

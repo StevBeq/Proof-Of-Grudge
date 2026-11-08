@@ -8,7 +8,8 @@
     "demo": "tsx run-demo.ts",
     "cli": "tsx cli.ts",
     "derive": "tsx derive-eth-address.ts",
-    "test": "node --import tsx --test scripts.test.ts",
+        "testnet:local": "tsx testnet-local.ts",
+    "test": "node --import tsx --test scripts.test.ts testnet-local.test.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {

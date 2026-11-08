@@ -10,11 +10,15 @@
 use super::*;
 use near_mpc_contract_interface::types::SignatureResponse;
 use near_sdk::{
+    PromiseResult,
     mock::MockAction,
     test_utils::{VMContextBuilder, get_created_receipts},
     testing_env,
 };
-use std::{collections::HashMap, panic::{AssertUnwindSafe, catch_unwind}};
+use std::{
+    collections::HashMap,
+    panic::{AssertUnwindSafe, catch_unwind},
+};
 
 const OWNER: &str = "owner.testnet";
 const HEIR: &str = "heir.testnet";
@@ -43,7 +47,8 @@ fn builder(predecessor: &str, signer: &str, at: u64, deposit: u128) -> VMContext
         .predecessor_account_id(account(predecessor))
         .signer_account_id(account(signer))
         .block_timestamp(at)
-        .account_balance(NearToken::from_near(100).checked_add(NearToken::from_yoctonear(deposit)).unwrap())
+        // The mocked runtime adds attached_deposit to this pre-receipt balance.
+        .account_balance(NearToken::from_near(100))
         .attached_deposit(NearToken::from_yoctonear(deposit))
         .prepaid_gas(Gas::from_tgas(300));
     builder
@@ -56,7 +61,7 @@ fn context(actor: &str, at: u64, deposit: u128) {
 fn signing_context(predecessor: &str, signer: &str, deposit: u128, gas: u64) {
     let mut builder = builder(predecessor, signer, DEADLINE, deposit);
     builder
-        .account_balance(NearToken::from_near(1000).checked_add(NearToken::from_yoctonear(deposit)).unwrap())
+        .account_balance(NearToken::from_near(1000))
         .prepaid_gas(Gas::from_tgas(gas));
     testing_env!(builder.build());
 }
@@ -73,16 +78,32 @@ fn callback(results: Vec<PromiseResult>) {
     );
 }
 
-fn initialize(actors: [&str; 3], address: [u8; 20], intervals: [u64; 3], bond: u128) -> VaultContract {
+fn initialize(
+    actors: [&str; 3],
+    address: [u8; 20],
+    intervals: [u64; 3],
+    bond: u128,
+) -> VaultContract {
     VaultContract::init(
-        account(actors[0]), account(actors[1]), account(actors[2]), address,
-        U64(intervals[0]), U64(intervals[1]), U64(intervals[2]), U128(bond),
+        account(actors[0]),
+        account(actors[1]),
+        account(actors[2]),
+        address,
+        U64(intervals[0]),
+        U64(intervals[1]),
+        U64(intervals[2]),
+        U128(bond),
     )
 }
 
 fn empty_vault() -> VaultContract {
     context(OWNER, 0, 0);
-    initialize([OWNER, HEIR, RIVAL], ADDRESS, [HEARTBEAT, GRACE, EXTENSION], BOND)
+    initialize(
+        [OWNER, HEIR, RIVAL],
+        ADDRESS,
+        [HEARTBEAT, GRACE, EXTENSION],
+        BOND,
+    )
 }
 
 fn funded_vault() -> VaultContract {
@@ -130,10 +151,17 @@ fn rejected<T>(expected: &str, action: impl FnOnce() -> T) {
     } else {
         panic!("Non-string panic; expected {expected:?}");
     };
-    assert!(message.contains(expected), "Expected {expected:?}, got {message:?}");
+    assert!(
+        message.contains(expected),
+        "Expected {expected:?}, got {message:?}"
+    );
 }
 
-fn rejected_unchanged(contract: &mut VaultContract, expected: &str, action: impl FnOnce(&mut VaultContract)) {
+fn rejected_unchanged(
+    contract: &mut VaultContract,
+    expected: &str,
+    action: impl FnOnce(&mut VaultContract),
+) {
     let before = near_sdk::borsh::to_vec(contract).unwrap();
     let view = snapshot(contract);
     rejected(expected, || action(contract));
@@ -143,7 +171,10 @@ fn rejected_unchanged(contract: &mut VaultContract, expected: &str, action: impl
 }
 
 fn assert_funds(contract: &VaultContract, credits: [u128; 3], assets: u128) {
-    assert_eq!(contract.credits.map(|amount| amount.as_yoctonear()), credits);
+    assert_eq!(
+        contract.credits.map(|amount| amount.as_yoctonear()),
+        credits
+    );
     assert_eq!(contract.vault_assets.as_yoctonear(), assets);
     assert_eq!(contract.locked_heir_bond, ZERO);
     assert_eq!(contract.locked_rival_bond, ZERO);
@@ -168,8 +199,11 @@ fn signature_value(recovery_id: u8) -> serde_json::Value {
 
 fn signature_bytes() -> Vec<u8> {
     let bytes = serde_json::to_vec(&signature_value(0)).unwrap();
-    let response: SignatureResponse = serde_json::from_slice(&bytes).expect("Official signature DTO");
-    assert!(matches!(response, SignatureResponse::Secp256k1(signature) if signature.recovery_id == 0));
+    let response: SignatureResponse =
+        serde_json::from_slice(&bytes).expect("Official signature DTO");
+    assert!(
+        matches!(response, SignatureResponse::Secp256k1(signature) if signature.recovery_id == 0)
+    );
     assert!(mpc::valid_response(&bytes));
     bytes
 }
@@ -210,32 +244,72 @@ fn initialization_keeps_raw_backing_out_of_the_asset_ledger() {
 #[test]
 fn initialization_rejects_every_actor_collision_and_the_vault_account() {
     for actors in [
-        [OWNER, OWNER, RIVAL], [OWNER, HEIR, OWNER], [OWNER, HEIR, HEIR],
+        [OWNER, OWNER, RIVAL],
+        [OWNER, HEIR, OWNER],
+        [OWNER, HEIR, HEIR],
         [OWNER, OWNER, OWNER],
     ] {
         context(OWNER, 0, 0);
-        rejected("Actors must be distinct", || initialize(actors, ADDRESS, [HEARTBEAT, GRACE, EXTENSION], BOND));
+        rejected("Actors must be distinct", || {
+            initialize(actors, ADDRESS, [HEARTBEAT, GRACE, EXTENSION], BOND)
+        });
     }
-    for actors in [[VAULT, HEIR, RIVAL], [OWNER, VAULT, RIVAL], [OWNER, HEIR, VAULT]] {
+    for actors in [
+        [VAULT, HEIR, RIVAL],
+        [OWNER, VAULT, RIVAL],
+        [OWNER, HEIR, VAULT],
+    ] {
         context(OWNER, 0, 0);
-        rejected("Actors must differ from vault account", || initialize(actors, ADDRESS, [HEARTBEAT, GRACE, EXTENSION], BOND));
+        rejected("Actors must differ from vault account", || {
+            initialize(actors, ADDRESS, [HEARTBEAT, GRACE, EXTENSION], BOND)
+        });
     }
 }
 
 #[test]
 fn initialization_rejects_zero_address_invalid_intervals_and_bonds() {
     context(OWNER, 0, 0);
-    rejected("Heir ETH address must not be zero", || initialize([OWNER, HEIR, RIVAL], [0; 20], [HEARTBEAT, GRACE, EXTENSION], BOND));
+    rejected("Heir ETH address must not be zero", || {
+        initialize(
+            [OWNER, HEIR, RIVAL],
+            [0; 20],
+            [HEARTBEAT, GRACE, EXTENSION],
+            BOND,
+        )
+    });
     for intervals in [[0, GRACE, EXTENSION], [HEARTBEAT, 0, EXTENSION]] {
         context(OWNER, 0, 0);
-        rejected("Intervals must be positive", || initialize([OWNER, HEIR, RIVAL], ADDRESS, intervals, BOND));
+        rejected("Intervals must be positive", || {
+            initialize([OWNER, HEIR, RIVAL], ADDRESS, intervals, BOND)
+        });
     }
     context(OWNER, 0, 0);
-    rejected("Challenge extension must cover grace period", || initialize([OWNER, HEIR, RIVAL], ADDRESS, [HEARTBEAT, GRACE, GRACE - 1], BOND));
+    rejected("Challenge extension must cover grace period", || {
+        initialize(
+            [OWNER, HEIR, RIVAL],
+            ADDRESS,
+            [HEARTBEAT, GRACE, GRACE - 1],
+            BOND,
+        )
+    });
     context(OWNER, 0, 0);
-    rejected("Bond must be positive", || initialize([OWNER, HEIR, RIVAL], ADDRESS, [HEARTBEAT, GRACE, EXTENSION], 0));
+    rejected("Bond must be positive", || {
+        initialize(
+            [OWNER, HEIR, RIVAL],
+            ADDRESS,
+            [HEARTBEAT, GRACE, EXTENSION],
+            0,
+        )
+    });
     context(OWNER, 0, 0);
-    rejected("Combined bond overflow", || initialize([OWNER, HEIR, RIVAL], ADDRESS, [HEARTBEAT, GRACE, EXTENSION], u128::MAX));
+    rejected("Combined bond overflow", || {
+        initialize(
+            [OWNER, HEIR, RIVAL],
+            ADDRESS,
+            [HEARTBEAT, GRACE, EXTENSION],
+            u128::MAX,
+        )
+    });
 }
 
 #[test]
@@ -249,7 +323,9 @@ fn false_alarm_credits_owner_and_restarts_the_heartbeat() {
     assert_eq!(contract.last_check_in_ns, at);
     assert_funds(&contract, [BOND, 0, 0], ASSETS);
     context(HEIR, at + HEARTBEAT, BOND);
-    rejected_unchanged(&mut contract, "Heartbeat has not expired", |c| c.initiate_claim());
+    rejected_unchanged(&mut contract, "Heartbeat has not expired", |c| {
+        c.initiate_claim()
+    });
     context(HEIR, at + HEARTBEAT + 1, BOND);
     contract.initiate_claim();
     assert!(matches!(contract.state, VaultState::Pending { .. }));
@@ -267,7 +343,9 @@ fn busted_credits_both_bonds_to_rival_and_restarts_the_heartbeat() {
     assert_eq!(contract.last_check_in_ns, at);
     assert_funds(&contract, [0, 0, 2 * BOND], ASSETS);
     context(HEIR, at + HEARTBEAT, BOND);
-    rejected_unchanged(&mut contract, "Heartbeat has not expired", |c| c.initiate_claim());
+    rejected_unchanged(&mut contract, "Heartbeat has not expired", |c| {
+        c.initiate_claim()
+    });
     context(HEIR, at + HEARTBEAT + 1, BOND);
     contract.initiate_claim();
     assert!(matches!(contract.state, VaultState::Pending { .. }));
@@ -283,7 +361,9 @@ fn uncontested_is_permissionless_at_exact_deadline_and_finalization_is_terminal(
     assert_eq!(contract.last_check_in_ns, 0);
     assert_funds(&contract, [0, ASSETS + BOND, 0], 0);
     context(ANYONE, DEADLINE + 1, 0);
-    rejected_unchanged(&mut contract, "No active inheritance claim", |c| c.finalize_inheritance());
+    rejected_unchanged(&mut contract, "No active inheritance claim", |c| {
+        c.finalize_inheritance()
+    });
     context(OWNER, DEADLINE + 1, 0);
     rejected_unchanged(&mut contract, "Vault is Finalized", |c| c.check_in());
     context(HEIR, DEADLINE + 1, BOND);
@@ -293,9 +373,13 @@ fn uncontested_is_permissionless_at_exact_deadline_and_finalization_is_terminal(
 #[test]
 fn spite_backfired_credits_only_recorded_assets_and_both_bonds_at_equality() {
     let mut contract = challenged_vault();
-    assert_eq!(contract.state, VaultState::Challenged {
-        claimed_at_ns: U64(CLAIM_AT), deadline_ns: U64(EXTENDED_DEADLINE),
-    });
+    assert_eq!(
+        contract.state,
+        VaultState::Challenged {
+            claimed_at_ns: U64(CLAIM_AT),
+            deadline_ns: U64(EXTENDED_DEADLINE),
+        }
+    );
     context(ANYONE, EXTENDED_DEADLINE, 0);
     contract.finalize_inheritance();
     assert_eq!(contract.state, VaultState::Finalized);
@@ -308,13 +392,31 @@ fn spite_backfired_credits_only_recorded_assets_and_both_bonds_at_equality() {
 fn check_in_rejects_exact_and_later_deadlines_for_both_active_states() {
     for challenged in [false, true] {
         for late in [0, 1] {
-            let mut contract = if challenged { challenged_vault() } else { pending_vault() };
-            let deadline = if challenged { EXTENDED_DEADLINE } else { DEADLINE };
+            let mut contract = if challenged {
+                challenged_vault()
+            } else {
+                pending_vault()
+            };
+            let deadline = if challenged {
+                EXTENDED_DEADLINE
+            } else {
+                DEADLINE
+            };
             context(OWNER, deadline + late, 0);
-            rejected_unchanged(&mut contract, "Deadline expired; check-in rejected", |c| c.check_in());
+            rejected_unchanged(&mut contract, "Deadline expired; check-in rejected", |c| {
+                c.check_in()
+            });
         }
-        let mut contract = if challenged { challenged_vault() } else { pending_vault() };
-        let deadline = if challenged { EXTENDED_DEADLINE } else { DEADLINE };
+        let mut contract = if challenged {
+            challenged_vault()
+        } else {
+            pending_vault()
+        };
+        let deadline = if challenged {
+            EXTENDED_DEADLINE
+        } else {
+            DEADLINE
+        };
         context(OWNER, deadline - 1, 0);
         contract.check_in();
         assert_eq!(contract.state, VaultState::Idle);
@@ -324,13 +426,29 @@ fn check_in_rejects_exact_and_later_deadlines_for_both_active_states() {
 #[test]
 fn finalization_is_rejected_early_or_without_an_active_claim() {
     for challenged in [false, true] {
-        let mut contract = if challenged { challenged_vault() } else { pending_vault() };
-        context(ANYONE, if challenged { EXTENDED_DEADLINE - 1 } else { DEADLINE - 1 }, 0);
-        rejected_unchanged(&mut contract, "Claim deadline has not arrived", |c| c.finalize_inheritance());
+        let mut contract = if challenged {
+            challenged_vault()
+        } else {
+            pending_vault()
+        };
+        context(
+            ANYONE,
+            if challenged {
+                EXTENDED_DEADLINE - 1
+            } else {
+                DEADLINE - 1
+            },
+            0,
+        );
+        rejected_unchanged(&mut contract, "Claim deadline has not arrived", |c| {
+            c.finalize_inheritance()
+        });
     }
     let mut contract = funded_vault();
     context(ANYONE, 0, 0);
-    rejected_unchanged(&mut contract, "No active inheritance claim", |c| c.finalize_inheritance());
+    rejected_unchanged(&mut contract, "No active inheritance claim", |c| {
+        c.finalize_inheritance()
+    });
 }
 
 #[test]
@@ -338,7 +456,9 @@ fn heartbeat_must_be_strictly_expired_and_idle_check_in_resets_it() {
     let mut contract = funded_vault();
     for at in [0, HEARTBEAT - 1, HEARTBEAT] {
         context(HEIR, at, BOND);
-        rejected_unchanged(&mut contract, "Heartbeat has not expired", |c| c.initiate_claim());
+        rejected_unchanged(&mut contract, "Heartbeat has not expired", |c| {
+            c.initiate_claim()
+        });
     }
     context(OWNER, HEARTBEAT, 0);
     contract.check_in();
@@ -355,10 +475,14 @@ fn both_bonds_require_exact_deposits_including_rejecting_one_yocto_over() {
     for deposit in [0, BOND - 1, BOND + 1, 2 * BOND] {
         let mut contract = funded_vault();
         context(HEIR, CLAIM_AT, deposit);
-        rejected_unchanged(&mut contract, "Exact bond deposit required", |c| c.initiate_claim());
+        rejected_unchanged(&mut contract, "Exact bond deposit required", |c| {
+            c.initiate_claim()
+        });
         let mut contract = pending_vault();
         context(RIVAL, CLAIM_AT + 1, deposit);
-        rejected_unchanged(&mut contract, "Exact bond deposit required", |c| c.challenge_claim());
+        rejected_unchanged(&mut contract, "Exact bond deposit required", |c| {
+            c.challenge_claim()
+        });
     }
     let contract = challenged_vault();
     assert_eq!(contract.locked_heir_bond.as_yoctonear(), BOND);
@@ -371,20 +495,38 @@ fn both_bonds_require_exact_deposits_including_rejecting_one_yocto_over() {
 fn challenge_is_once_only_and_before_the_original_deadline() {
     let mut contract = pending_vault();
     context(RIVAL, DEADLINE, BOND);
-    rejected_unchanged(&mut contract, "Deadline expired; challenge rejected", |c| c.challenge_claim());
+    rejected_unchanged(&mut contract, "Deadline expired; challenge rejected", |c| {
+        c.challenge_claim()
+    });
     context(RIVAL, DEADLINE - 1, BOND);
     contract.challenge_claim();
-    assert_eq!(contract.state, VaultState::Challenged {
-        claimed_at_ns: U64(CLAIM_AT), deadline_ns: U64(EXTENDED_DEADLINE),
-    });
+    assert_eq!(
+        contract.state,
+        VaultState::Challenged {
+            claimed_at_ns: U64(CLAIM_AT),
+            deadline_ns: U64(EXTENDED_DEADLINE),
+        }
+    );
     context(RIVAL, DEADLINE, BOND);
-    rejected_unchanged(&mut contract, "Only a Pending claim can be challenged", |c| c.challenge_claim());
+    rejected_unchanged(
+        &mut contract,
+        "Only a Pending claim can be challenged",
+        |c| c.challenge_claim(),
+    );
     let mut contract = funded_vault();
     context(RIVAL, CLAIM_AT, BOND);
-    rejected_unchanged(&mut contract, "Only a Pending claim can be challenged", |c| c.challenge_claim());
+    rejected_unchanged(
+        &mut contract,
+        "Only a Pending claim can be challenged",
+        |c| c.challenge_claim(),
+    );
     let mut contract = finalized_vault();
     context(RIVAL, DEADLINE + 1, BOND);
-    rejected_unchanged(&mut contract, "Only a Pending claim can be challenged", |c| c.challenge_claim());
+    rejected_unchanged(
+        &mut contract,
+        "Only a Pending claim can be challenged",
+        |c| c.challenge_claim(),
+    );
 }
 
 #[test]
@@ -394,7 +536,9 @@ fn authorization_uses_predecessor_not_a_spoofed_authorized_signer() {
         testing_env!(builder(predecessor, OWNER, CLAIM_AT, BOND).build());
         rejected_unchanged(&mut contract, "Unauthorized actor", |c| c.deposit_vault());
         rejected_unchanged(&mut contract, "Unauthorized actor", |c| c.check_in());
-        rejected_unchanged(&mut contract, "Unauthorized actor", |c| c.owner_withdraw_near(U128(BOND)));
+        rejected_unchanged(&mut contract, "Unauthorized actor", |c| {
+            c.owner_withdraw_near(U128(BOND))
+        });
     }
     for predecessor in [ANYONE, OWNER, RIVAL] {
         let mut contract = funded_vault();
@@ -419,9 +563,23 @@ fn authorization_uses_predecessor_not_a_spoofed_authorized_signer() {
 #[test]
 fn timestamp_overflow_is_rejected_before_accepting_funds_or_resetting_state() {
     context(OWNER, u64::MAX - HEARTBEAT + 1, 0);
-    rejected("Timestamp overflow", || initialize([OWNER, HEIR, RIVAL], ADDRESS, [HEARTBEAT, GRACE, EXTENSION], BOND));
+    rejected("Timestamp overflow", || {
+        initialize(
+            [OWNER, HEIR, RIVAL],
+            ADDRESS,
+            [HEARTBEAT, GRACE, EXTENSION],
+            BOND,
+        )
+    });
     context(OWNER, 0, 0);
-    rejected("Timestamp overflow", || initialize([OWNER, HEIR, RIVAL], ADDRESS, [u64::MAX - GRACE, GRACE, EXTENSION], BOND));
+    rejected("Timestamp overflow", || {
+        initialize(
+            [OWNER, HEIR, RIVAL],
+            ADDRESS,
+            [u64::MAX - GRACE, GRACE, EXTENSION],
+            BOND,
+        )
+    });
     let mut contract = funded_vault();
     context(OWNER, u64::MAX - HEARTBEAT + 1, 0);
     rejected_unchanged(&mut contract, "Timestamp overflow", |c| c.check_in());
@@ -434,31 +592,47 @@ fn timestamp_overflow_is_rejected_before_accepting_funds_or_resetting_state() {
     contract.initiate_claim();
     context(RIVAL, u64::MAX - GRACE - EXTENSION + 1, BOND);
     contract.challenge_claim();
-    assert!(matches!(contract.state, VaultState::Challenged { deadline_ns: U64(u64::MAX), .. }));
+    assert!(matches!(
+        contract.state,
+        VaultState::Challenged {
+            deadline_ns: U64(u64::MAX),
+            ..
+        }
+    ));
 }
 
 #[test]
 fn idle_withdrawal_is_a_bounded_owner_credit_not_a_raw_balance_transfer() {
     let mut contract = funded_vault();
     context(OWNER, 1, 0);
-    rejected_unchanged(&mut contract, "Amount must be positive", |c| c.owner_withdraw_near(U128(0)));
-    rejected_unchanged(&mut contract, "Insufficient vault assets", |c| c.owner_withdraw_near(U128(ASSETS + 1)));
+    rejected_unchanged(&mut contract, "Amount must be positive", |c| {
+        c.owner_withdraw_near(U128(0))
+    });
+    rejected_unchanged(&mut contract, "Insufficient vault assets", |c| {
+        c.owner_withdraw_near(U128(ASSETS + 1))
+    });
     contract.owner_withdraw_near(U128(3 * BOND));
     assert_funds(&contract, [3 * BOND, 0, 0], 7 * BOND);
     assert!(get_created_receipts().is_empty());
     context(OWNER, 2, 0);
     contract.owner_withdraw_near(U128(7 * BOND));
     assert_funds(&contract, [ASSETS, 0, 0], 0);
-    rejected_unchanged(&mut contract, "Insufficient vault assets", |c| c.owner_withdraw_near(U128(1)));
+    rejected_unchanged(&mut contract, "Insufficient vault assets", |c| {
+        c.owner_withdraw_near(U128(1))
+    });
     for mut contract in [pending_vault(), challenged_vault(), finalized_vault()] {
         context(OWNER, EXTENDED_DEADLINE, 0);
-        rejected_unchanged(&mut contract, "Vault must be Idle", |c| c.owner_withdraw_near(U128(BOND)));
+        rejected_unchanged(&mut contract, "Vault must be Idle", |c| {
+            c.owner_withdraw_near(U128(BOND))
+        });
         context(OWNER, EXTENDED_DEADLINE, BOND);
         rejected_unchanged(&mut contract, "Vault must be Idle", |c| c.deposit_vault());
     }
     let mut contract = empty_vault();
     context(OWNER, 0, 0);
-    rejected_unchanged(&mut contract, "Deposit must be positive", |c| c.deposit_vault());
+    rejected_unchanged(&mut contract, "Deposit must be positive", |c| {
+        c.deposit_vault()
+    });
 }
 
 #[test]
@@ -470,7 +644,10 @@ fn payout_failure_restores_credit_success_clears_and_old_ids_are_noops() {
     drop(contract.withdraw_payout());
     let id = contract.pending_payouts[0].as_ref().unwrap().id;
     assert_eq!(contract.credits[0], ZERO);
-    assert_eq!(snapshot(&contract)["payouts_in_flight"]["owner"], (3 * BOND).to_string());
+    assert_eq!(
+        snapshot(&contract)["payouts_in_flight"]["owner"],
+        (3 * BOND).to_string()
+    );
     let receipts = get_created_receipts();
     assert_eq!(receipts.len(), 2);
     assert_eq!(receipts[0].receiver_id, account(OWNER));
@@ -483,7 +660,9 @@ fn payout_failure_restores_credit_success_clears_and_old_ids_are_noops() {
             && serde_json::from_slice::<serde_json::Value>(args).unwrap() == json!({"actor":"Owner", "transfer_id":id.to_string()})
             && *attached_deposit == ZERO && *prepaid_gas == PAYOUT_CALLBACK_GAS)));
     context(OWNER, 3, 0);
-    rejected_unchanged(&mut contract, "Payout already in flight", |c| { drop(c.withdraw_payout()); });
+    rejected_unchanged(&mut contract, "Payout already in flight", |c| {
+        drop(c.withdraw_payout());
+    });
     callback(vec![PromiseResult::Failed]);
     assert!(!contract.on_payout_complete(Actor::Owner, U64(id + 1)));
     assert!(contract.pending_payouts[0].is_some());
@@ -519,9 +698,16 @@ fn payout_completion_preserves_new_credits_accrued_while_in_flight() {
         context(OWNER, 3, 0);
         contract.owner_withdraw_near(U128(2 * BOND));
         assert_eq!(contract.credits[0].as_yoctonear(), 2 * BOND);
-        callback(vec![if success { PromiseResult::Successful(Vec::new()) } else { PromiseResult::Failed }]);
+        callback(vec![if success {
+            PromiseResult::Successful(Vec::new())
+        } else {
+            PromiseResult::Failed
+        }]);
         assert_eq!(contract.on_payout_complete(Actor::Owner, U64(id)), success);
-        assert_eq!(contract.credits[0].as_yoctonear(), if success { 2 * BOND } else { 3 * BOND });
+        assert_eq!(
+            contract.credits[0].as_yoctonear(),
+            if success { 2 * BOND } else { 3 * BOND }
+        );
         assert_eq!(contract.vault_assets.as_yoctonear(), 7 * BOND);
         assert!(contract.pending_payouts[0].is_none());
     }
@@ -531,14 +717,20 @@ fn payout_completion_preserves_new_credits_accrued_while_in_flight() {
 fn payout_guards_authorization_empty_credit_gas_and_callback_result_count() {
     let mut contract = funded_vault();
     context(OWNER, 1, 0);
-    rejected_unchanged(&mut contract, "No payout credit", |c| { drop(c.withdraw_payout()); });
+    rejected_unchanged(&mut contract, "No payout credit", |c| {
+        drop(c.withdraw_payout());
+    });
     contract.owner_withdraw_near(U128(BOND));
     testing_env!(builder(ANYONE, OWNER, 2, 0).build());
-    rejected_unchanged(&mut contract, "Unauthorized actor", |c| { drop(c.withdraw_payout()); });
+    rejected_unchanged(&mut contract, "Unauthorized actor", |c| {
+        drop(c.withdraw_payout());
+    });
     let mut low_gas = builder(OWNER, OWNER, 2, 0);
     low_gas.prepaid_gas(Gas::from_tgas(34));
     testing_env!(low_gas.build());
-    rejected_unchanged(&mut contract, "Attach at least 50 Tgas", |c| { drop(c.withdraw_payout()); });
+    rejected_unchanged(&mut contract, "Attach at least 50 Tgas", |c| {
+        drop(c.withdraw_payout());
+    });
     context(OWNER, 3, 0);
     drop(contract.withdraw_payout());
     let id = contract.pending_payouts[0].as_ref().unwrap().id;
@@ -555,12 +747,17 @@ fn payout_guards_authorization_empty_credit_gas_and_callback_result_count() {
 fn heir_and_rival_can_pull_their_own_branch_credits() {
     for (mut contract, actor, kind, amount) in [
         (finalized_vault(), HEIR, Actor::Heir, ASSETS + BOND),
-        ({
-            let mut c = challenged_vault();
-            context(OWNER, DEADLINE, 0);
-            c.check_in();
-            c
-        }, RIVAL, Actor::Rival, 2 * BOND),
+        (
+            {
+                let mut c = challenged_vault();
+                context(OWNER, DEADLINE, 0);
+                c.check_in();
+                c
+            },
+            RIVAL,
+            Actor::Rival,
+            2 * BOND,
+        ),
     ] {
         context(actor, EXTENDED_DEADLINE, 0);
         drop(contract.withdraw_payout());
@@ -584,7 +781,9 @@ fn preview_is_read_only_destination_locked_and_uses_fixed_sepolia_chain() {
     let preview = contract.preview_eth_release(U64(0), U128(0), U128(2), U128(1), U64(21_000));
     // Independent hand-derived preimage: type 2, Sepolia aa36a7, no data/access list.
     // This is not represented as an executed viem golden-vector comparison.
-    let mut expected = vec![0x02, 0xe2, 0x83, 0xaa, 0x36, 0xa7, 0x80, 0x01, 0x02, 0x82, 0x52, 0x08, 0x94];
+    let mut expected = vec![
+        0x02, 0xe2, 0x83, 0xaa, 0x36, 0xa7, 0x80, 0x01, 0x02, 0x82, 0x52, 0x08, 0x94,
+    ];
     expected.extend_from_slice(&ADDRESS);
     expected.extend_from_slice(&[0x80, 0x80, 0xc0]);
     assert_eq!(preview.unsigned_tx_hex, hex(&expected));
@@ -596,7 +795,13 @@ fn preview_is_read_only_destination_locked_and_uses_fixed_sepolia_chain() {
     assert_eq!(preview.gas_limit.0, 21_000);
     assert_eq!(near_sdk::borsh::to_vec(&contract).unwrap(), before);
     assert!(get_created_receipts().is_empty());
-    let upper = contract.preview_eth_release(U64(u64::MAX), U128(u128::MAX), U128(u128::MAX), U128(1), U64(1_000_000));
+    let upper = contract.preview_eth_release(
+        U64(u64::MAX),
+        U128(u128::MAX),
+        U128(u128::MAX),
+        U128(1),
+        U64(1_000_000),
+    );
     assert_eq!(upper.gas_limit.0, 1_000_000);
 }
 
@@ -605,14 +810,25 @@ fn preview_rejects_out_of_policy_gas_and_fees() {
     let contract = empty_vault();
     for gas in [0, 20_999, 1_000_001, u64::MAX] {
         context(ANYONE, 0, 0);
-        rejected("Gas limit must be between 21000 and 1000000", || contract.preview_eth_release(U64(0), U128(1), U128(2), U128(1), U64(gas)));
+        rejected("Gas limit must be between 21000 and 1000000", || {
+            contract.preview_eth_release(U64(0), U128(1), U128(2), U128(1), U64(gas))
+        });
     }
     for (maximum, priority, error) in [
-        (0, 1, "Fees must be positive"), (2, 0, "Fees must be positive"),
+        (0, 1, "Fees must be positive"),
+        (2, 0, "Fees must be positive"),
         (1, 2, "Priority fee exceeds maximum fee"),
     ] {
         context(ANYONE, 0, 0);
-        rejected(error, || contract.preview_eth_release(U64(0), U128(1), U128(maximum), U128(priority), U64(21_000)));
+        rejected(error, || {
+            contract.preview_eth_release(
+                U64(0),
+                U128(1),
+                U128(maximum),
+                U128(priority),
+                U64(21_000),
+            )
+        });
     }
 }
 
@@ -640,9 +856,13 @@ fn signing_requires_finalization_heir_predecessor_positive_deposit_and_enough_ga
         drop(c.request_eth_release(U64(0), U128(1), U128(2), U128(1), U64(21_000)));
     });
     signing_context(HEIR, HEIR, SIGN_DEPOSIT, 300);
-    rejected_unchanged(&mut contract, "Gas limit must be between 21000 and 1000000", |c| {
-        drop(c.request_eth_release(U64(0), U128(1), U128(2), U128(1), U64(20_999)));
-    });
+    rejected_unchanged(
+        &mut contract,
+        "Gas limit must be between 21000 and 1000000",
+        |c| {
+            drop(c.request_eth_release(U64(0), U128(1), U128(2), U128(1), U64(20_999)));
+        },
+    );
     signing_context(HEIR, ANYONE, SIGN_DEPOSIT, 300);
     drop(contract.request_eth_release(U64(0), U128(1), U128(2), U128(1), U64(21_000)));
     signing_context(HEIR, HEIR, SIGN_DEPOSIT, 300);
@@ -664,18 +884,34 @@ fn signing_receipt_forwards_only_heir_deposit_and_the_official_v2_hash() {
     let receipts = get_created_receipts();
     assert_eq!(receipts.len(), 2);
     assert_eq!(receipts[0].receiver_id, account("v1.signer-prod.testnet"));
-    let sign_args = receipts[0].actions.iter().find_map(|action| {
-        if let MockAction::FunctionCallWeight { method_name, args, attached_deposit, prepaid_gas, .. } = action {
-            assert_eq!(method_name.as_slice(), b"sign");
-            assert_eq!(attached_deposit.as_yoctonear(), SIGN_DEPOSIT);
-            assert_eq!(*prepaid_gas, MPC_GAS);
-            Some(serde_json::from_slice::<serde_json::Value>(args).unwrap())
-        } else { None }
-    }).expect("MPC function call");
-    assert_eq!(sign_args, json!({"request": {
-        "path": "ethereum-1", "domain_id": 0,
-        "payload_v2": {"Ecdsa": hex(&pending.transaction.hash)[2..].to_owned()},
-    }}));
+    let sign_args = receipts[0]
+        .actions
+        .iter()
+        .find_map(|action| {
+            if let MockAction::FunctionCallWeight {
+                method_name,
+                args,
+                attached_deposit,
+                prepaid_gas,
+                ..
+            } = action
+            {
+                assert_eq!(method_name.as_slice(), b"sign");
+                assert_eq!(attached_deposit.as_yoctonear(), SIGN_DEPOSIT);
+                assert_eq!(*prepaid_gas, MPC_GAS);
+                Some(serde_json::from_slice::<serde_json::Value>(args).unwrap())
+            } else {
+                None
+            }
+        })
+        .expect("MPC function call");
+    assert_eq!(
+        sign_args,
+        json!({"request": {
+            "path": "ethereum-1", "domain_id": 0,
+            "payload_v2": {"Ecdsa": hex(&pending.transaction.hash)[2..].to_owned()},
+        }})
+    );
     assert_eq!(receipts[1].receiver_id, account(VAULT));
     assert!(receipts[1].actions.iter().any(|action| matches!(action,
         MockAction::FunctionCallWeight { method_name, args, attached_deposit, prepaid_gas, .. }
@@ -712,7 +948,13 @@ fn successful_signing_stores_the_dto_and_replays_cannot_replace_it() {
     let mut contract = finalized_vault();
     let before = contract.credits;
     let id = request(&mut contract, 7);
-    let unsigned = contract.pending_signature.as_ref().unwrap().transaction.unsigned.clone();
+    let unsigned = contract
+        .pending_signature
+        .as_ref()
+        .unwrap()
+        .transaction
+        .unsigned
+        .clone();
     callback(vec![PromiseResult::Successful(signature_bytes())]);
     let result = contract.on_eth_signature(U64(id));
     assert!(result.success);
@@ -725,7 +967,10 @@ fn successful_signing_stores_the_dto_and_replays_cannot_replace_it() {
     assert_eq!(release.signature, signature_value(0));
     assert!(contract.pending_signature.is_none());
     assert_eq!(contract.credits, before);
-    assert_eq!(snapshot(&contract)["eth_release"], serde_json::to_value(&release).unwrap());
+    assert_eq!(
+        snapshot(&contract)["eth_release"],
+        serde_json::to_value(&release).unwrap()
+    );
     let view = snapshot(&contract);
     let replay = contract.on_eth_signature(U64(id));
     assert!(!replay.success);
@@ -764,10 +1009,12 @@ fn malformed_wrong_scheme_oversized_and_invalid_recovery_signatures_restore_depo
     let mut bad_scalar = signature_value(0);
     bad_scalar["s"]["scalar"] = json!("07".repeat(31));
     let inputs = vec![
-        b"null".to_vec(), b"not json".to_vec(),
+        b"null".to_vec(),
+        b"not json".to_vec(),
         serde_json::to_vec(&json!({"scheme":"Ed25519", "signature":vec![7u8; 64]})).unwrap(),
         serde_json::to_vec(&signature_value(2)).unwrap(),
-        serde_json::to_vec(&bad_point).unwrap(), serde_json::to_vec(&bad_scalar).unwrap(),
+        serde_json::to_vec(&bad_point).unwrap(),
+        serde_json::to_vec(&bad_scalar).unwrap(),
         vec![b' '; 1025],
     ];
     for bytes in inputs {
@@ -783,7 +1030,9 @@ fn malformed_wrong_scheme_oversized_and_invalid_recovery_signatures_restore_depo
         assert_eq!(contract.credits[1].as_yoctonear(), before + SIGN_DEPOSIT);
         assert!(contract.pending_signature.is_none());
     }
-    assert!(mpc::valid_response(&serde_json::to_vec(&signature_value(1)).unwrap()));
+    assert!(mpc::valid_response(
+        &serde_json::to_vec(&signature_value(1)).unwrap()
+    ));
 }
 
 #[test]
@@ -810,17 +1059,80 @@ fn signature_callback_requires_one_result_and_matching_request_id() {
 #[test]
 fn mpc_failure_credit_can_accrue_while_heir_payout_is_in_flight() {
     let mut contract = finalized_vault();
+    let sign_id = request(&mut contract, 0);
     context(HEIR, DEADLINE, 0);
     drop(contract.withdraw_payout());
     let payout_id = contract.pending_payouts[1].as_ref().unwrap().id;
-    let sign_id = request(&mut contract, 0);
-    assert!(sign_id > payout_id);
+    assert!(payout_id > sign_id);
     callback(vec![PromiseResult::Failed]);
-    assert_eq!(contract.on_eth_signature(U64(sign_id)).refund_credited.0, SIGN_DEPOSIT);
+    assert_eq!(
+        contract.on_eth_signature(U64(sign_id)).refund_credited.0,
+        SIGN_DEPOSIT
+    );
     assert_eq!(contract.credits[1].as_yoctonear(), SIGN_DEPOSIT);
     assert!(!contract.on_payout_complete(Actor::Heir, U64(payout_id)));
-    assert_eq!(contract.credits[1].as_yoctonear(), ASSETS + BOND + SIGN_DEPOSIT);
+    assert_eq!(
+        contract.credits[1].as_yoctonear(),
+        ASSETS + BOND + SIGN_DEPOSIT
+    );
     assert!(contract.pending_payouts[1].is_none());
+}
+
+#[test]
+fn unresolved_refunds_cannot_back_a_new_mpc_request_for_any_actor() {
+    for (actor, name) in [
+        (Actor::Owner, OWNER),
+        (Actor::Heir, HEIR),
+        (Actor::Rival, RIVAL),
+    ] {
+        let mut contract = finalized_vault();
+        // Model credits accumulated in earlier rounds for Owner/Rival.
+        if actor != Actor::Heir {
+            contract.credits[1] = contract.credits[1]
+                .checked_sub(NearToken::from_yoctonear(BOND))
+                .unwrap();
+            contract.credits[actor.index()] = NearToken::from_yoctonear(BOND);
+        }
+        context(name, DEADLINE, 0);
+        drop(contract.withdraw_payout());
+        let payout_id = contract.pending_payouts[actor.index()].as_ref().unwrap().id;
+        let amount = contract.pending_payouts[actor.index()]
+            .as_ref()
+            .unwrap()
+            .amount;
+
+        // Even a large returned balance cannot be treated as surplus while
+        // its transfer resolver has not restored the corresponding credit.
+        signing_context(HEIR, HEIR, SIGN_DEPOSIT, 300);
+        rejected_unchanged(
+            &mut contract,
+            "Settle all payouts before MPC signing",
+            |vault| {
+                drop(vault.request_eth_release(U64(0), U128(1), U128(2), U128(1), U64(21_000)));
+            },
+        );
+        callback(vec![PromiseResult::Failed]);
+        assert!(!contract.on_payout_complete(actor, U64(payout_id)));
+        assert_eq!(contract.credits[actor.index()], amount);
+        assert!(contract.pending_payouts.iter().all(Option::is_none));
+
+        let liabilities = contract.held_liabilities().as_yoctonear();
+        let pre_deposit = OPERATING_BUFFER.as_yoctonear() + liabilities + SIGN_DEPOSIT;
+        let mut boundary = builder(HEIR, HEIR, DEADLINE, SIGN_DEPOSIT);
+        boundary
+            .storage_usage(0)
+            .account_balance(NearToken::from_yoctonear(pre_deposit - 1));
+        testing_env!(boundary.build());
+        // Pure guard: direct Rust calls cannot roll back mutations on panic.
+        // The pending failure credit plus the outgoing deposit require 2D.
+        rejected("Insufficient operating surplus", || {
+            contract.assert_liquidity(NearToken::from_yoctonear(2 * SIGN_DEPOSIT))
+        });
+        boundary.account_balance(NearToken::from_yoctonear(pre_deposit));
+        testing_env!(boundary.build());
+        drop(contract.request_eth_release(U64(0), U128(1), U128(2), U128(1), U64(21_000)));
+        assert!(contract.pending_signature.is_some());
+    }
 }
 
 #[test]
@@ -830,25 +1142,41 @@ fn liquidity_reserves_vault_credits_signing_deposit_and_operating_buffer() {
     let liabilities = ASSETS + BOND + SIGN_DEPOSIT;
     assert_eq!(contract.held_liabilities().as_yoctonear(), liabilities);
     let mut low_balance = builder(VAULT, HEIR, DEADLINE, 0);
-    low_balance.storage_usage(0).account_balance(NearToken::from_yoctonear(liabilities + BOND));
+    low_balance
+        .storage_usage(0)
+        .account_balance(NearToken::from_yoctonear(liabilities + BOND));
     testing_env!(low_balance.build());
     // This pure guard test avoids asserting transaction rollback after mutation.
-    rejected("Insufficient operating surplus", || contract.assert_liquidity(NearToken::from_yoctonear(SIGN_DEPOSIT)));
+    rejected("Insufficient operating surplus", || {
+        contract.assert_liquidity(NearToken::from_yoctonear(SIGN_DEPOSIT))
+    });
     callback(vec![PromiseResult::Failed]);
-    assert_eq!(contract.on_eth_signature(U64(id)).refund_credited.0, SIGN_DEPOSIT);
+    assert_eq!(
+        contract.on_eth_signature(U64(id)).refund_credited.0,
+        SIGN_DEPOSIT
+    );
     assert_eq!(contract.held_liabilities().as_yoctonear(), liabilities);
 }
 
 #[test]
 fn shared_branch_vectors_match_serialized_public_snapshots() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../test-vectors/branches.json"))
-        .expect("Shared branch vectors are valid JSON");
+    let vectors: serde_json::Value =
+        serde_json::from_str(include_str!("../../test-vectors/branches.json"))
+            .expect("Shared branch vectors are valid JSON");
     let config = &vectors["config"];
     let decimal = |value: &serde_json::Value| -> u128 {
-        value.as_str().expect("Decimal string").parse().expect("Valid u128")
+        value
+            .as_str()
+            .expect("Decimal string")
+            .parse()
+            .expect("Valid u128")
     };
     let timestamp = |value: &serde_json::Value| -> u64 {
-        value.as_str().expect("Timestamp string").parse().expect("Valid u64")
+        value
+            .as_str()
+            .expect("Timestamp string")
+            .parse()
+            .expect("Valid u64")
     };
     assert_eq!(timestamp(&config["heartbeat_ns"]), HEARTBEAT);
     assert_eq!(timestamp(&config["grace_ns"]), GRACE);
@@ -862,15 +1190,23 @@ fn shared_branch_vectors_match_serialized_public_snapshots() {
         let name = case["name"].as_str().expect("Case name");
         context(OWNER, 0, 0);
         let mut contract = initialize(
-            [OWNER, HEIR, RIVAL], ADDRESS,
-            [timestamp(&config["heartbeat_ns"]), timestamp(&config["grace_ns"]), timestamp(&config["extension_ns"])],
+            [OWNER, HEIR, RIVAL],
+            ADDRESS,
+            [
+                timestamp(&config["heartbeat_ns"]),
+                timestamp(&config["grace_ns"]),
+                timestamp(&config["extension_ns"]),
+            ],
             decimal(&config["bond_yocto"]),
         );
         context(OWNER, 0, decimal(&config["vault_yocto"]));
         contract.deposit_vault();
         for step in case["steps"].as_array().expect("Case steps") {
             let actor = match step["actor"].as_str().expect("Step actor") {
-                "owner" => OWNER, "heir" => HEIR, "rival" => RIVAL, "anyone" => ANYONE,
+                "owner" => OWNER,
+                "heir" => HEIR,
+                "rival" => RIVAL,
+                "anyone" => ANYONE,
                 actor => panic!("Unknown actor {actor} in {name}"),
             };
             let deposit = step.get("deposit").map_or(0, &decimal);
@@ -883,15 +1219,29 @@ fn shared_branch_vectors_match_serialized_public_snapshots() {
                     "challenge_claim" => contract.challenge_claim(),
                     "check_in" => contract.check_in(),
                     "finalize_inheritance" => contract.finalize_inheritance(),
-                    "owner_withdraw_near" => contract.owner_withdraw_near(U128(decimal(&step["amount"]))),
+                    "owner_withdraw_near" => {
+                        contract.owner_withdraw_near(U128(decimal(&step["amount"])))
+                    }
                     "deposit_vault" => contract.deposit_vault(),
                     call => panic!("Unknown call {call} in {name}"),
                 }
             }));
-            if step.get("reject").and_then(serde_json::Value::as_bool).unwrap_or(false) {
+            if step
+                .get("reject")
+                .and_then(serde_json::Value::as_bool)
+                .unwrap_or(false)
+            {
                 assert!(result.is_err(), "{name}: expected rejection for {step}");
-                assert_eq!(near_sdk::borsh::to_vec(&contract).unwrap(), before, "{name}: rejection mutated state");
-                assert_eq!(snapshot(&contract), view, "{name}: rejection mutated snapshot");
+                assert_eq!(
+                    near_sdk::borsh::to_vec(&contract).unwrap(),
+                    before,
+                    "{name}: rejection mutated state"
+                );
+                assert_eq!(
+                    snapshot(&contract),
+                    view,
+                    "{name}: rejection mutated snapshot"
+                );
             } else {
                 assert!(result.is_ok(), "{name}: unexpected rejection for {step}");
             }
@@ -905,6 +1255,9 @@ fn shared_branch_vectors_match_serialized_public_snapshots() {
         outcomes.insert(expected["outcome"].as_str().unwrap().to_owned());
     }
     for outcome in ["FalseAlarm", "Busted", "Uncontested", "SpiteBackfired"] {
-        assert!(outcomes.contains(outcome), "Shared vectors must cover {outcome}");
+        assert!(
+            outcomes.contains(outcome),
+            "Shared vectors must cover {outcome}"
+        );
     }
 }

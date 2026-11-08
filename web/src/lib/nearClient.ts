@@ -82,7 +82,7 @@ export function safeProof(value: unknown): ProofLink | null {
     const item = record(value); if (typeof item.url !== 'string') return null;
     const u = new URL(item.url);
     if (u.protocol !== 'https:' || u.username || u.password || u.search || u.hash || u.port) return null;
-    if (u.hostname === 'testnet.nearblocks.io' && /^\/txns\/[1-9A-HJ-NP-Za-km-z]{43,44}\/?$/.test(u.pathname)) return { network: 'near-testnet', url: u.href };
+    if (u.hostname === 'testnet.nearblocks.io' && /^\/txns\/[1-9A-HJ-NP-Za-km-z]{32,44}\/?$/.test(u.pathname)) return { network: 'near-testnet', url: u.href };
     if (u.hostname === 'sepolia.etherscan.io' && /^\/tx\/0x[0-9a-fA-F]{64}\/?$/.test(u.pathname)) return { network: 'sepolia', url: u.href };
     return null;
   } catch { return null; }
@@ -96,7 +96,7 @@ export function parseProofManifest(value: unknown): ProofManifest {
     if (!link) continue;
     const item = record(entry);
     if (typeof item.label !== 'string' || !item.label.trim() || typeof item.createdAt !== 'string' || !Number.isFinite(Date.parse(item.createdAt))) continue;
-    if (item.nearTxHash !== undefined && (typeof item.nearTxHash !== 'string' || !/^[1-9A-HJ-NP-Za-km-z]{43,44}$/.test(item.nearTxHash))) continue;
+    if (item.nearTxHash !== undefined && (typeof item.nearTxHash !== 'string' || !/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(item.nearTxHash))) continue;
     if (item.sepoliaTxHash !== undefined && (typeof item.sepoliaTxHash !== 'string' || !/^0x[0-9a-fA-F]{64}$/.test(item.sepoliaTxHash))) continue;
     const hash = new URL(link.url).pathname.split('/').filter(Boolean).at(-1);
     if (link.network === 'near-testnet' && item.nearTxHash !== undefined && item.nearTxHash !== hash) continue;
