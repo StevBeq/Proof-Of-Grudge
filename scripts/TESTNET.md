@@ -13,8 +13,8 @@ This is faucet-funded test infrastructure, not a production custody deployment. 
 - NEAR code hash (base58): `HJxNXviRSeAYdzuNMFMxarNbxF3QGd5jhsHK9VGB4oWH`.
 - Both vaults below were deployed and initialized in one batch transaction.
 - All four native payoff branches completed, including payout transfer receipts and cleared in-flight slots. An Idle owner asset withdrawal also completed on the second vault.
-- Live MPC views confirmed Running state and a domain-0 Secp256k1 key. The sampled sign-call minimum was 15 Tgas. The pinned interface source specifies a 1 yoctoNEAR deposit; **successful live signing is not yet verified**.
-- Sepolia RPC reports chain ID **11155111**. The vault-derived sender was unfunded at the last check; no MPC signature or Sepolia broadcast is claimed.
+- Live MPC signing via 1.signer-prod.testnet successfully executed with domain-0 Secp256k1 key, verifying the official payload_v2 wire format on Testnet.
+- Sepolia broadcast confirmed on chain ID **11155111**, transferring 0.001 ETH to the locked heir recipient with block confirmation on Sepolia Etherscan.
 
 The local date and chain timestamps can differ by timezone. Proof links and chain block data, not a local clock, are the source of truth. Clean-clone reproduction and Sandbox fault injection have not been executed. Official Sandbox supports Linux and supported macOS, not Windows native; this host has no configured Linux distribution or Docker runtime.
 
@@ -41,6 +41,8 @@ Vault: `pog-mw835qrr-1c82b2-vault.testnet`
 | Rival payout: 2 NEAR | [ANGSds3oyHiqdFW5ZQLCDzAwRsLaUKBbD9EuYdnAcfBh](https://testnet.nearblocks.io/txns/ANGSds3oyHiqdFW5ZQLCDzAwRsLaUKBbD9EuYdnAcfBh) |
 | Spite resolution | [7mmEXzUxrWCFuZw3tA876ucV8F99bkueRLyFtfCv4TVr](https://testnet.nearblocks.io/txns/7mmEXzUxrWCFuZw3tA876ucV8F99bkueRLyFtfCv4TVr) |
 | Heir payout: 7 NEAR | [5Mdjx8gRtCoDvzaH4tukgpCdrhPr5qACw2enupU2DfSQ](https://testnet.nearblocks.io/txns/5Mdjx8gRtCoDvzaH4tukgpCdrhPr5qACw2enupU2DfSQ) |
+| Request ETH release (NEAR MPC) | [3YjwuYyEAAVxLKt8mJqkchnXvPdYVnkBAjACsCFYbTDu](https://testnet.nearblocks.io/txns/3YjwuYyEAAVxLKt8mJqkchnXvPdYVnkBAjACsCFYbTDu) |
+| Sepolia ETH release (0.001 ETH) | [0xc703affa31096138523f3f7ce40a442552ab08d41ff63e9b756ce479da5af758](https://sepolia.etherscan.io/tx/0xc703affa31096138523f3f7ce40a442552ab08d41ff63e9b756ce479da5af758) |
 
 ### Uncontested and Idle owner withdrawal
 

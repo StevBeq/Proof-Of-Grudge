@@ -127,6 +127,18 @@
       "nearTxHash": "BdCDDKijLC86hxvFhvzG2iRyFEGeS9DJsAmuCSbse1Kn",
       "url": "https://testnet.nearblocks.io/txns/BdCDDKijLC86hxvFhvzG2iRyFEGeS9DJsAmuCSbse1Kn",
       "createdAt": "2026-11-08T17:29:58.428Z"
+    },
+    {
+      "label": "heir: request_eth_release",
+      "nearTxHash": "3YjwuYyEAAVxLKt8mJqkchnXvPdYVnkBAjACsCFYbTDu",
+      "url": "https://testnet.nearblocks.io/txns/3YjwuYyEAAVxLKt8mJqkchnXvPdYVnkBAjACsCFYbTDu",
+      "createdAt": "2026-11-09T06:12:00.030Z"
+    },
+    {
+      "label": "Sepolia ETH release",
+      "sepoliaTxHash": "0xc703affa31096138523f3f7ce40a442552ab08d41ff63e9b756ce479da5af758",
+      "url": "https://sepolia.etherscan.io/tx/0xc703affa31096138523f3f7ce40a442552ab08d41ff63e9b756ce479da5af758",
+      "createdAt": "2026-11-09T06:12:27.524Z"
     }
   ]
 }

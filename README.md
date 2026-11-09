@@ -16,7 +16,7 @@ The repository contains:
 - A CLI for offline scenarios and explicitly authorized Testnet/Sepolia operations.
 - An English/Indonesian web simulator with an optional read-only contract inspector.
 
-**Status:** development prototype, not audited. Local tests pass (41 Rust unit tests, 1 viem golden-vector test, 33 CLI/setup tests and 32 web tests), and the WASM builds with embedded ABI. All four native NEAR payoff branches have executed on Testnet with successful payout receipts. MPC signing and the Sepolia ETH transfer are not yet verified; no hosted demo or production readiness is claimed. See [Testnet evidence and setup](scripts/TESTNET.md).
+**Status:** development prototype, not audited. Local tests pass (41 Rust unit tests, 1 viem golden-vector test, 33 CLI/setup tests and 32 web tests), and the WASM builds with embedded ABI. All four native NEAR payoff branches have executed on Testnet with successful payout receipts. Cross-chain ETH release on Ethereum Sepolia has been successfully signed via NEAR Chain Signatures MPC and broadcast. See [Testnet evidence and setup](scripts/TESTNET.md).
 
 ### Live NEAR Testnet Evidence
 
@@ -29,6 +29,8 @@ The contract is actively deployed on NEAR Testnet and verified across all four p
 | **Heir Payout (7 NEAR)** | [5Mdjx8gRtCoDvzaH4tukgpCdrhPr5qACw2enupU2DfSQ](https://testnet.nearblocks.io/txns/5Mdjx8gRtCoDvzaH4tukgpCdrhPr5qACw2enupU2DfSQ) |
 | **Rival Payout (2 NEAR)** | [ANGSds3oyHiqdFW5ZQLCDzAwRsLaUKBbD9EuYdnAcfBh](https://testnet.nearblocks.io/txns/ANGSds3oyHiqdFW5ZQLCDzAwRsLaUKBbD9EuYdnAcfBh) |
 | **Owner Payout (1 NEAR)** | [2BXG1iSt7m16wtd1gjfDezRZkQAzQ4Gk6XgmJsuss7WL](https://testnet.nearblocks.io/txns/2BXG1iSt7m16wtd1gjfDezRZkQAzQ4Gk6XgmJsuss7WL) |
+| **MPC Sign Request (NEAR)** | [3YjwuYyEAAVxLKt8mJqkchnXvPdYVnkBAjACsCFYbTDu](https://testnet.nearblocks.io/txns/3YjwuYyEAAVxLKt8mJqkchnXvPdYVnkBAjACsCFYbTDu) |
+| **Sepolia ETH Release (EVM)** | [0xc703affa31096138523f3f7ce40a442552ab08d41ff63e9b756ce479da5af758](https://sepolia.etherscan.io/tx/0xc703affa31096138523f3f7ce40a442552ab08d41ff63e9b756ce479da5af758) |
 
 ## How NEAR is used
 
