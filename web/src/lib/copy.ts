@@ -64,6 +64,18 @@ const en = {
   errorHeartbeat: 'Wait until strictly after the heartbeat deadline.', errorDeadline: 'Check-in and challenge require time strictly before the deadline.',
   errorEarly: 'The claim deadline has not passed.', errorBond: 'The deposit must equal the required bond exactly.',
   errorAmount: 'Enter a positive amount no greater than the vault assets.', errorCredit: 'No credit is available for this action.', errorFlight: 'Wait for the in-flight transfer callback.', errorSimulation: 'No real signature or transfer is available in simulation.',
+  caseFile: 'Case file No. 001', skipIntro: 'Skip intro', dragHint: 'Drag to rotate', resetView: 'Reset view',
+  evidenceTitle: 'Evidence on record', evidenceVault: 'NEAR in the vault', evidenceBond: 'NEAR required bond B', evidenceBranches: 'Outcome branches',
+  dossier: 'Dossier', dossierTitle: 'Three people. One case file.', dossierIntro: 'Every rank in this case carries a colour, a seal, and a role in the cockpit below. Choose one to mark it on the strongbox.',
+  ownerTitle: 'The keeper', ownerDesc: 'The only one who can cancel a claim — by checking in before the deadline. Without him, the clock runs.',
+  heirTitle: 'The claimant', heirDesc: 'The first to hold a mustard seal. He can only claim after a missed heartbeat, and only by locking in the same bond B.',
+  rivalTitle: 'The objector', rivalDesc: 'The red stamp. The rival can only delay once, at the price of locking bond B — and must be right, or lose it.',
+  selectActor: 'Mark this actor',
+  step1Title: 'Step 1 — The claim', step2Title: 'Step 2 — The objection', step3Title: 'Step 3 — The return',
+  mechanismHint: 'Select a step to see its seal lock on the strongbox.',
+  roundsTitle: 'Four rounds of the case.', roundsIntro: 'The same rules, four different endings. Play any round and the cockpit below runs it for real — on the same vault state machine as the contract.',
+  playRound: 'Play this round', round: 'Round',
+  localLocked: 'Local simulation — interactive, no wallet, no funds.', liveLocked: 'Live inspector — READ-ONLY frame. Nothing here signs.',
 };
 export type Copy = typeof en;
 const id: Copy = {
@@ -130,6 +142,18 @@ const id: Copy = {
   errorHeartbeat: 'Tunggu hingga melewati tenggat lapor aktif.', errorDeadline: 'Lapor aktif dan tantangan hanya sah sebelum tenggat.',
   errorEarly: 'Tenggat klaim belum berlalu.', errorBond: 'Setoran harus tepat sama dengan jaminan wajib.',
   errorAmount: 'Masukkan jumlah positif yang tidak melebihi aset brankas.', errorCredit: 'Tidak ada kredit untuk tindakan ini.', errorFlight: 'Tunggu callback transfer yang diproses.', errorSimulation: 'Tidak ada tanda tangan atau transfer nyata dalam simulasi.',
+  caseFile: 'Berkas Perkara No. 001', skipIntro: 'Lewati pembuka', dragHint: 'Seret untuk memutar', resetView: 'Atur ulang tampilan',
+  evidenceTitle: 'Bukti yang tercatat', evidenceVault: 'NEAR di brankas', evidenceBond: 'NEAR jaminan wajib B', evidenceBranches: 'Cabang hasil perkara',
+  dossier: 'Dossier', dossierTitle: 'Tiga orang. Satu berkas perkara.', dossierIntro: 'Setiap peran dalam perkara ini membawa warna, segel, dan peranan di panel kendali di bawah. Pilih satu untuk menandainya di brankas.',
+  ownerTitle: 'Sang penjaga', ownerDesc: 'Satu-satunya yang dapat membatalkan klaim — dengan lapor aktif sebelum tenggat. Tanpanya, waktu terus berjalan.',
+  heirTitle: 'Sang pengklaim', heirDesc: 'Pegang segel mustard pertama. Ia baru dapat mengklaim setelah lapor aktif terlewat, dan hanya dengan mengunci jaminan B yang sama.',
+  rivalTitle: 'Sang penentang', rivalDesc: 'Cap merah. Rival hanya dapat menunda satu kali, dengan harga mengunci jaminan B — dan harus benar, atau kehilangannya.',
+  selectActor: 'Tandai peran ini',
+  step1Title: 'Langkah 1 — Klaim', step2Title: 'Langkah 2 — Tantangan', step3Title: 'Langkah 3 — Kepulangan',
+  mechanismHint: 'Pilih langkah untuk melihat segelnya mengunci di brankas.',
+  roundsTitle: 'Empat babak perkara.', roundsIntro: 'Aturan yang sama, empat akhir yang berbeda. Mainkan babak mana pun dan panel kendali di bawah menjalankannya secara nyata — dengan mesin status yang sama seperti kontrak.',
+  playRound: 'Mainkan babak ini', round: 'Babak',
+  localLocked: 'Simulasi lokal — interaktif, tanpa dompet, tanpa dana.', liveLocked: 'Inspektur langsung — bingkai HANYA BACA. Tidak ada yang menandatangani di sini.',
 };
 export const copies: Record<Locale, Copy> = { en, id };
 export const roleLabel = (c: Copy, role: Role) => c[role];

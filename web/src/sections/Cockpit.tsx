@@ -10,7 +10,7 @@ import { ExpectedValue } from './ExpectedValue';
 import { Amount } from './Amount';
 
 type Entry = { id: number; at: bigint; call?: Call; actor?: Action['actor']; error?: ErrorCode; kind?: 'reset' | 'time'; success?: boolean };
-type Props = { c: Copy; locale: Locale; onScene: (state: Status, outcome: Outcome) => void };
+type Props = { c: Copy; locale: Locale; onScene: (state: Status, outcome: Outcome) => void; role?: Role; onRoleChange?: (role: Role) => void; scenarioRequest?: { id: number; outcome: Outcome } | null };
 function ActionButton({ label, tip, reason, actor, onClick }: { label: string; tip: string; reason?: string; actor?: Role; onClick: () => void }) {
   const id = useId();
   return <span className="action-wrap" tabIndex={reason ? 0 : undefined} aria-describedby={reason ? id : undefined}>
@@ -18,8 +18,11 @@ function ActionButton({ label, tip, reason, actor, onClick }: { label: string; t
     <span id={id} className="action-tip" role="tooltip">{reason || tip}</span>
   </span>;
 }
-export function Cockpit({ c, locale, onScene }: Props) {
-  const [mode, setMode] = useState<'local' | 'live'>('local'); const [role, setRole] = useState<Role>('heir');
+export function Cockpit({ c, locale, onScene, role: roleProp, onRoleChange, scenarioRequest }: Props) {
+  const [mode, setMode] = useState<'local' | 'live'>('local');
+  const [roleState, setRoleState] = useState<Role>('heir');
+  const role = roleProp ?? roleState;
+  const setRole = onRoleChange ?? setRoleState;
   const [vault, setVault] = useState(() => createVault(demoConfig, 0n)); const vaultRef = useRef(vault);
   const origin = useRef(performance.now()); const offset = useRef(0n);
   const clock = () => BigInt(Math.floor(performance.now() - origin.current)) * 1_000_000n + offset.current;
@@ -48,30 +51,78 @@ export function Cockpit({ c, locale, onScene }: Props) {
     const next = { ...entry, id: ++sequence.current };
     setLog(previous => [...previous, next]);
   };
-  const perform = (action: Action) => {
-    if (mode !== 'local') return;
+  const doAction = (action: Action): boolean => {
     const at = clock(); setNow(at); setReleaseNotice(false);
     try {
       const next = transition(vaultRef.current, action, at); vaultRef.current = next; setVault(next);
       setReverted(false); setLastError(null); append({ at, call: action.call, actor: action.actor, success: action.success });
+      return true;
     } catch (error) {
       const code = error instanceof VaultError ? error.code : 'state';
       setLastError(code);
       if (action.call === 'check_in' && code === 'deadline') setReverted(true);
       append({ at, call: action.call, actor: action.actor, error: code });
+      return false;
     }
+  };
+  const perform = (action: Action) => {
+    if (mode !== 'local') return;
+    doAction(action);
+  };
+  const advanceTo = (target: bigint) => {
+    const at = clock();
+    if (target > at) { offset.current += target - at; setNow(target); append({ at: target, kind: 'time' }); }
   };
   const advance = (toDeadline = false) => {
     const at = clock(); const v = vaultRef.current;
     const boundary = v.deadline ?? v.lastCheckIn + v.config.heartbeat + 1n;
     const target = toDeadline ? (boundary > at ? boundary : at) : at + 30n * NS;
-    offset.current += target - at; setNow(target); append({ at: target, kind: 'time' });
+    advanceTo(target);
   };
   const reset = () => {
     origin.current = performance.now(); offset.current = 0n;
     const next = createVault(demoConfig, 0n); vaultRef.current = next; setVault(next); setNow(0n);
     setReverted(false); setLastError(null); setReleaseNotice(false); append({ at: 0n, kind: 'reset' });
   };
+  const runScenario = (targetOutcome: Outcome) => {
+    setMode('local');
+    reset();
+    const bond = vaultRef.current.config.bond;
+    const pastHeartbeat = () => vaultRef.current.lastCheckIn + vaultRef.current.config.heartbeat + 5n * NS;
+    const pastDeadline = () => (vaultRef.current.deadline ?? 0n) + NS;
+    switch (targetOutcome) {
+      case 'FalseAlarm':
+        advanceTo(pastHeartbeat());
+        doAction({ call: 'initiate_claim', actor: 'heir', deposit: bond });
+        doAction({ call: 'check_in', actor: 'owner' });
+        break;
+      case 'Busted':
+        advanceTo(pastHeartbeat());
+        doAction({ call: 'initiate_claim', actor: 'heir', deposit: bond });
+        doAction({ call: 'challenge_claim', actor: 'rival', deposit: bond });
+        doAction({ call: 'check_in', actor: 'owner' });
+        break;
+      case 'Uncontested':
+        advanceTo(pastHeartbeat());
+        doAction({ call: 'initiate_claim', actor: 'heir', deposit: bond });
+        advanceTo(pastDeadline());
+        doAction({ call: 'finalize_inheritance', actor: 'anyone' });
+        break;
+      case 'SpiteBackfired':
+        advanceTo(pastHeartbeat());
+        doAction({ call: 'initiate_claim', actor: 'heir', deposit: bond });
+        doAction({ call: 'challenge_claim', actor: 'rival', deposit: bond });
+        advanceTo(pastDeadline());
+        doAction({ call: 'finalize_inheritance', actor: 'anyone' });
+        break;
+      default:
+        break;
+    }
+  };
+  useEffect(() => {
+    if (scenarioRequest) runScenario(scenarioRequest.outcome);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scenarioRequest?.id]);
   const reasonFor = (action: Action) => {
     const reason = available(vault, action, now); return reason ? errorLabel(c, reason) : undefined;
   };
