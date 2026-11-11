@@ -18,5 +18,33 @@ export function BondLab({ c, locale }: { c: Copy; locale: Locale }) {
     };
     update.current();
   }, [c, locale]);
-  return <section className="section bond-lab" id="bond-lab" aria-labelledby="lab-title"><div className="lab-copy"><h2 id="lab-title">{c.bondLab}</h2><p>{c.bondIntro}</p><p className="model-formula">B ≥ A × (1 - q) / q</p><p className="caption">{c.assumption}</p></div><form className="lab-controls" onSubmit={e => e.preventDefault()} onInput={() => update.current()}><label htmlFor="vault-value">{c.value}</label><input id="vault-value" type="text" inputMode="decimal" defaultValue="100" ref={assets} aria-describedby="value-error" /><p ref={error} id="value-error" className="caption feedback" hidden>{c.invalidNumber}</p><div className="ev-label"><label htmlFor="return-probability">{c.probability}</label><output ref={qLabel} htmlFor="return-probability" className="mono">90%</output></div><input id="return-probability" type="range" min="1" max="100" defaultValue="90" ref={q} /><label htmlFor="bond-result" className="caption">{c.minimum}</label><output id="bond-result" ref={result} htmlFor="vault-value return-probability" className="lab-result mono">≈ 11.111111 NEAR</output><p className="caption">{c.example}</p></form></section>;
+  return (
+    <section className="section bond-lab" id="bond-lab" aria-labelledby="lab-title">
+      <div className="bond-lab-card">
+        <div className="lab-copy">
+          <p className="case-kicker">{c.minimum}</p>
+          <span className="chapter-mark mono" aria-hidden="true">05</span>
+          <h2 id="lab-title">{c.bondLab}</h2>
+          <p>{c.bondIntro}</p>
+          <p className="model-formula">B ≥ A × (1 - q) / q</p>
+          <p className="caption">{c.assumption}</p>
+        </div>
+        <form className="lab-controls" onSubmit={e => e.preventDefault()} onInput={() => update.current()}>
+          <label htmlFor="vault-value">{c.value}</label>
+          <input id="vault-value" type="text" inputMode="decimal" defaultValue="100" ref={assets} aria-describedby="value-error" />
+          <p ref={error} id="value-error" className="caption feedback" hidden>{c.invalidNumber}</p>
+          <div className="ev-label">
+            <label htmlFor="return-probability">{c.probability}</label>
+            <output ref={qLabel} htmlFor="return-probability" className="mono">90%</output>
+          </div>
+          <input id="return-probability" type="range" min="1" max="100" defaultValue="90" ref={q} />
+          <div className="lab-result-box">
+            <label htmlFor="bond-result" className="caption">{c.minimum}</label>
+            <output id="bond-result" ref={result} htmlFor="vault-value return-probability" className="lab-result mono">≈ 11.111111 NEAR</output>
+            <p className="caption">{c.example}</p>
+          </div>
+        </form>
+      </div>
+    </section>
+  );
 }

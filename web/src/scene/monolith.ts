@@ -9,6 +9,9 @@ import {
 
 const PALETTE = {
   paper: 0xf2ebdd,
+  envelopeBase: 0xeae1cc,
+  envelopeCream: 0xfff8e8,
+  goldGleam: 0xf5d061,
   ink: 0x16130d,
   bodyMain: 0xe6decb,
   bodyTrim: 0xd2c5ae,
@@ -34,6 +37,29 @@ function createRoundedRectShape(width: number, height: number, radius: number): 
   shape.quadraticCurveTo(x, y + height, x, y + height - r);
   shape.lineTo(x, y + r);
   shape.quadraticCurveTo(x, y, x + r, y);
+  return shape;
+}
+
+function createEnvelopePocketShape(width: number, height: number): THREE.Shape {
+  const shape = new THREE.Shape();
+  const halfW = width / 2;
+  const halfH = height / 2;
+  shape.moveTo(-halfW, -halfH);
+  shape.lineTo(halfW, -halfH);
+  shape.lineTo(halfW, halfH * 0.65);
+  shape.lineTo(0, -halfH * 0.12);
+  shape.lineTo(-halfW, halfH * 0.65);
+  shape.closePath();
+  return shape;
+}
+
+function createEnvelopeFlapShape(width: number, flapDrop: number): THREE.Shape {
+  const shape = new THREE.Shape();
+  const halfW = width / 2;
+  shape.moveTo(-halfW, 0);
+  shape.lineTo(halfW, 0);
+  shape.lineTo(0, -flapDrop);
+  shape.closePath();
   return shape;
 }
 
@@ -112,7 +138,7 @@ export function createMonolith(canvas: HTMLCanvasElement) {
     new THREE.LineBasicMaterial({
       color: PALETTE.ink,
       transparent: true,
-      opacity: 0.92,
+      opacity: 0.94,
     }),
   );
 
@@ -132,6 +158,7 @@ export function createMonolith(canvas: HTMLCanvasElement) {
   // 1. STRONGBOX BODY (Brankas Arsip Utama)
   // ============================================================================
   const strongboxGroup = new THREE.Group();
+  strongboxGroup.position.y = -0.22;
   root.add(strongboxGroup);
 
   const bodyShape = createRoundedRectShape(2.36, 1.42, 0.18);
@@ -388,7 +415,230 @@ export function createMonolith(canvas: HTMLCanvasElement) {
   needlePivot.add(needleMesh);
 
   // ============================================================================
-  // 5. POSE ANIMATION STATE & DRAG-TO-ROTATE INTERACTION
+  // 5. INCLINED ORBIT TRACK + TWO ORBITING SEAL COINS (Koin Segel H & Koin Segel R)
+  // ============================================================================
+  const orbitSystemGroup = new THREE.Group();
+  orbitSystemGroup.position.set(0, 0.02, 0);
+  orbitSystemGroup.rotation.set(1.18, 0, -0.24);
+  strongboxGroup.add(orbitSystemGroup);
+
+  const ORBIT_RADIUS = 1.94;
+  const orbitTrackGeo = trackGeo(new THREE.TorusGeometry(ORBIT_RADIUS, 0.022, 8, 52));
+  const orbitTrackMat = createFlatBandMaterial(PALETTE.ironDark);
+  const orbitTrackMesh = new THREE.Mesh(orbitTrackGeo, orbitTrackMat);
+  addInkOutline(orbitTrackMesh, orbitTrackGeo, 28);
+  orbitSystemGroup.add(orbitTrackMesh);
+
+  const orbitInnerTrackGeo = trackGeo(new THREE.TorusGeometry(ORBIT_RADIUS - 0.14, 0.011, 6, 40));
+  const orbitInnerTrackMat = createFlatBandMaterial(PALETTE.bodyTrim);
+  const orbitInnerTrackMesh = new THREE.Mesh(orbitInnerTrackGeo, orbitInnerTrackMat);
+  orbitSystemGroup.add(orbitInnerTrackMesh);
+
+  const orbitSpinnerGroup = new THREE.Group();
+  orbitSystemGroup.add(orbitSpinnerGroup);
+
+  function createOrbitingSealCoin(color: number, kind: 'owner' | 'heir' | 'rival') {
+    const coinAnchor = new THREE.Group();
+    const coinSpin = new THREE.Group();
+    coinAnchor.add(coinSpin);
+
+    const coinDiscGeo = trackGeo(new THREE.CylinderGeometry(0.32, 0.32, 0.09, 20));
+    coinDiscGeo.rotateX(Math.PI / 2);
+    const coinDiscMat = createFlatBandMaterial(color, color, 0.08);
+    const coinDiscMesh = new THREE.Mesh(coinDiscGeo, coinDiscMat);
+    addInkOutline(coinDiscMesh, coinDiscGeo, 18);
+    coinSpin.add(coinDiscMesh);
+
+    const coinRimGeo = trackGeo(new THREE.TorusGeometry(0.24, 0.022, 8, 18));
+    const coinRimMat = createFlatBandMaterial(PALETTE.ironDark);
+    const frontRim = new THREE.Mesh(coinRimGeo, coinRimMat);
+    frontRim.position.z = 0.048;
+    const backRim = new THREE.Mesh(coinRimGeo, coinRimMat);
+    backRim.position.z = -0.048;
+    coinSpin.add(frontRim, backRim);
+
+    const glyphMat = createFlatBandMaterial(kind === 'heir' ? PALETTE.ink : PALETTE.paper);
+    if (kind === 'heir') {
+      const vBarGeo = trackGeo(new THREE.BoxGeometry(0.055, 0.22, 0.12));
+      const hBarGeo = trackGeo(new THREE.BoxGeometry(0.16, 0.055, 0.12));
+      const leftV = new THREE.Mesh(vBarGeo, glyphMat);
+      leftV.position.set(-0.065, 0, 0);
+      const rightV = new THREE.Mesh(vBarGeo, glyphMat);
+      rightV.position.set(0.065, 0, 0);
+      const midH = new THREE.Mesh(hBarGeo, glyphMat);
+      midH.position.set(0, 0, 0);
+      coinSpin.add(leftV, rightV, midH);
+    } else if (kind === 'rival') {
+      const stemGeo = trackGeo(new THREE.BoxGeometry(0.055, 0.22, 0.12));
+      const bowlGeo = trackGeo(new THREE.BoxGeometry(0.14, 0.1, 0.12));
+      const legGeo = trackGeo(new THREE.BoxGeometry(0.055, 0.13, 0.12));
+      const stem = new THREE.Mesh(stemGeo, glyphMat);
+      stem.position.set(-0.055, 0, 0);
+      const bowl = new THREE.Mesh(bowlGeo, glyphMat);
+      bowl.position.set(0.015, 0.055, 0);
+      const leg = new THREE.Mesh(legGeo, glyphMat);
+      leg.position.set(0.045, -0.055, 0);
+      leg.rotation.z = -0.45;
+      coinSpin.add(stem, bowl, leg);
+    } else {
+      // Owner coin: clock-ring + heartbeat hands
+      const ringGeo = trackGeo(new THREE.TorusGeometry(0.11, 0.025, 8, 16));
+      const ringMeshF = new THREE.Mesh(ringGeo, glyphMat);
+      ringMeshF.position.z = 0.05;
+      const ringMeshB = new THREE.Mesh(ringGeo, glyphMat);
+      ringMeshB.position.z = -0.05;
+      const handVGeo = trackGeo(new THREE.BoxGeometry(0.038, 0.11, 0.12));
+      const handHGeo = trackGeo(new THREE.BoxGeometry(0.09, 0.038, 0.12));
+      const handV = new THREE.Mesh(handVGeo, glyphMat);
+      handV.position.set(0, 0.03, 0);
+      const handH = new THREE.Mesh(handHGeo, glyphMat);
+      handH.position.set(0.025, 0, 0);
+      coinSpin.add(ringMeshF, ringMeshB, handV, handH);
+    }
+
+    return { coinAnchor, coinSpin, coinDiscMat };
+  }
+
+  const coinH = createOrbitingSealCoin(PALETTE.heirMustard, 'heir');
+  coinH.coinAnchor.position.set(ORBIT_RADIUS, 0, 0);
+  coinH.coinAnchor.rotation.x = -Math.PI / 2;
+  orbitSpinnerGroup.add(coinH.coinAnchor);
+
+  const coinR = createOrbitingSealCoin(PALETTE.rivalRed, 'rival');
+  coinR.coinAnchor.position.set(
+    Math.cos((Math.PI * 2) / 3) * ORBIT_RADIUS,
+    Math.sin((Math.PI * 2) / 3) * ORBIT_RADIUS,
+    0,
+  );
+  coinR.coinAnchor.rotation.x = -Math.PI / 2;
+  orbitSpinnerGroup.add(coinR.coinAnchor);
+
+  const coinO = createOrbitingSealCoin(PALETTE.ownerBlue, 'owner');
+  coinO.coinAnchor.position.set(
+    Math.cos((Math.PI * 4) / 3) * ORBIT_RADIUS,
+    Math.sin((Math.PI * 4) / 3) * ORBIT_RADIUS,
+    0,
+  );
+  coinO.coinAnchor.rotation.x = -Math.PI / 2;
+  orbitSpinnerGroup.add(coinO.coinAnchor);
+
+  // ============================================================================
+  // 6. FLOATING DEED ENVELOPE + GOLD GLEAM (Amplop Akta Melayang + Kilau Emas)
+  // ============================================================================
+  const envelopeGroup = new THREE.Group();
+  envelopeGroup.position.set(0, 1.56, 0.06);
+  strongboxGroup.add(envelopeGroup);
+
+  // Envelope base body (#EAE1CC with #16130D 2px-style ink border)
+  const envBodyShape = createRoundedRectShape(1.48, 0.92, 0.06);
+  const envBodyGeo = trackGeo(
+    new THREE.ExtrudeGeometry(envBodyShape, {
+      depth: 0.07,
+      bevelEnabled: false,
+      steps: 1,
+    }),
+  );
+  envBodyGeo.translate(0, 0, -0.035);
+  const envBodyMat = createFlatBandMaterial(PALETTE.envelopeBase);
+  const envBodyMesh = new THREE.Mesh(envBodyGeo, envBodyMat);
+  addInkOutline(envBodyMesh, envBodyGeo, 15);
+  envelopeGroup.add(envBodyMesh);
+
+  // Inner Deed Parchment Card (#FFF8E8) that slides up when envelope opens
+  const envCardGroup = new THREE.Group();
+  envCardGroup.position.set(0, 0.02, 0.005);
+  envelopeGroup.add(envCardGroup);
+
+  const envCardGeo = trackGeo(new THREE.BoxGeometry(1.26, 0.76, 0.032));
+  const envCardMat = createFlatBandMaterial(PALETTE.envelopeCream);
+  const envCardMesh = new THREE.Mesh(envCardGeo, envCardMat);
+  addInkOutline(envCardMesh, envCardGeo, 15);
+  envCardGroup.add(envCardMesh);
+
+  // Two ink ledger lines on the inner parchment card
+  const ruleLineGeo = trackGeo(new THREE.BoxGeometry(0.84, 0.03, 0.038));
+  const ruleLineMat = createFlatBandMaterial(PALETTE.ink);
+  const ruleLineTop = new THREE.Mesh(ruleLineGeo, ruleLineMat);
+  ruleLineTop.position.set(0, 0.18, 0);
+  const ruleLineBot = new THREE.Mesh(ruleLineGeo, ruleLineMat);
+  ruleLineBot.position.set(0, 0.05, 0);
+  envCardGroup.add(ruleLineTop, ruleLineBot);
+
+  // Front V-fold pocket (#FFF8E8 with #16130D ink outline)
+  const pocketShape = createEnvelopePocketShape(1.44, 0.88);
+  const pocketGeo = trackGeo(
+    new THREE.ExtrudeGeometry(pocketShape, {
+      depth: 0.026,
+      bevelEnabled: false,
+      steps: 1,
+    }),
+  );
+  pocketGeo.translate(0, 0, 0.025);
+  const pocketMat = createFlatBandMaterial(PALETTE.envelopeCream);
+  const pocketMesh = new THREE.Mesh(pocketGeo, pocketMat);
+  addInkOutline(pocketMesh, pocketGeo, 12);
+  envelopeGroup.add(pocketMesh);
+
+  // Top Hinged Envelope Flap (rotates open on Finalized)
+  const flapPivot = new THREE.Group();
+  flapPivot.position.set(0, 0.45, 0.042);
+  envelopeGroup.add(flapPivot);
+
+  const flapShape = createEnvelopeFlapShape(1.44, 0.52);
+  const flapGeo = trackGeo(
+    new THREE.ExtrudeGeometry(flapShape, {
+      depth: 0.024,
+      bevelEnabled: false,
+      steps: 1,
+    }),
+  );
+  const flapMat = createFlatBandMaterial(PALETTE.envelopeBase);
+  const flapMesh = new THREE.Mesh(flapGeo, flapMat);
+  addInkOutline(flapMesh, flapGeo, 12);
+  flapPivot.add(flapMesh);
+
+  // Wax Seal on the tip of the envelope flap
+  const flapSealGeo = trackGeo(new THREE.CylinderGeometry(0.14, 0.15, 0.045, 16));
+  flapSealGeo.rotateX(Math.PI / 2);
+  const flapSealMat = createFlatBandMaterial(PALETTE.ownerBlue, PALETTE.ownerBlue, 0.1);
+  const flapSealMesh = new THREE.Mesh(flapSealGeo, flapSealMat);
+  flapSealMesh.position.set(0, -0.44, 0.026);
+  addInkOutline(flapSealMesh, flapSealGeo, 18);
+  flapPivot.add(flapSealMesh);
+
+  // Gold Gleam / Inheritance Crest (#F5D061) emerging when Finalized
+  const gleamGroup = new THREE.Group();
+  gleamGroup.position.set(0, 0.25, 0.04);
+  gleamGroup.scale.setScalar(0.001);
+  envelopeGroup.add(gleamGroup);
+
+  const gleamCoreGeo = trackGeo(new THREE.OctahedronGeometry(0.24, 0));
+  const gleamMat = createFlatBandMaterial(PALETTE.goldGleam, PALETTE.goldGleam, 0.34);
+  const gleamCoreMesh = new THREE.Mesh(gleamCoreGeo, gleamMat);
+  addInkOutline(gleamCoreMesh, gleamCoreGeo, 12);
+  gleamGroup.add(gleamCoreMesh);
+
+  const gleamHaloGeo = trackGeo(new THREE.TorusGeometry(0.39, 0.024, 8, 28));
+  const gleamHaloMesh = new THREE.Mesh(gleamHaloGeo, gleamMat);
+  addInkOutline(gleamHaloMesh, gleamHaloGeo, 24);
+  gleamGroup.add(gleamHaloMesh);
+
+  const gleamRaysGroup = new THREE.Group();
+  gleamGroup.add(gleamRaysGroup);
+
+  const rayGeo = trackGeo(new THREE.OctahedronGeometry(0.075, 0));
+  rayGeo.scale(0.65, 2.1, 0.65);
+  for (let i = 0; i < 4; i++) {
+    const angle = (Math.PI / 2) * i + Math.PI / 4;
+    const rayMesh = new THREE.Mesh(rayGeo, gleamMat);
+    rayMesh.position.set(Math.cos(angle) * 0.48, Math.sin(angle) * 0.48, 0);
+    rayMesh.rotation.z = angle - Math.PI / 2;
+    addInkOutline(rayMesh, rayGeo, 12);
+    gleamRaysGroup.add(rayMesh);
+  }
+
+  // ============================================================================
+  // 7. POSE ANIMATION STATE & DRAG-TO-ROTATE INTERACTION
   // ============================================================================
   const pose = {
     lidAngle: 0,
@@ -402,6 +652,16 @@ export function createMonolith(canvas: HTMLCanvasElement) {
     ringExtScale: 0.001,
     dialSpeed: 0.35,
     boxBounceY: 0,
+    orbitSpeed: 0.42,
+    orbitTilt: 0.34,
+    coinHScale: 1,
+    coinRScale: 1,
+    coinHRadiusOffset: 0,
+    coinRRadiusOffset: 0,
+    envelopeFlapAngle: 0,
+    envelopeCardLift: 0,
+    gleamScale: 0.001,
+    gleamLift: 0,
   };
 
   const intro = { scale: 0.86 };
@@ -412,6 +672,15 @@ export function createMonolith(canvas: HTMLCanvasElement) {
   let lastResetTrigger = sceneInput.resetTrigger;
   let shakeStart = -10;
   let lastSeconds = 0;
+
+  // Peripheral side-arc transition state (routes 3D strongbox along screen margins so it never covers center text)
+  let lastAnchorId: string | null = null;
+  let arcT = 1;
+  let arcStartX = 0;
+  let arcStartY = 0;
+  let arcWaypointX = 0;
+  let arcStartTime = 0;
+  const ARC_DURATION = 0.65;
 
   // Drag-to-rotate state with inertia and mobile vertical-scroll protection
   let dragMode: 'idle' | 'pending' | 'dragging' | 'scrolling' = 'idle';
@@ -517,6 +786,7 @@ export function createMonolith(canvas: HTMLCanvasElement) {
 
   let width = 0;
   let height = 0;
+  let lidAutoCloseTimer: number | null = null;
   const resize = () => {
     width = window.innerWidth;
     height = window.innerHeight;
@@ -534,6 +804,11 @@ export function createMonolith(canvas: HTMLCanvasElement) {
     if (sig !== previousSignature) {
       previousSignature = sig;
 
+      if (lidAutoCloseTimer !== null) {
+        window.clearTimeout(lidAutoCloseTimer);
+        lidAutoCloseTimer = null;
+      }
+
       gsap.to(pose, {
         lidAngle: -derived.lidOpen * 1.16,
         deedLift: derived.lidOpen * 0.46,
@@ -545,12 +820,40 @@ export function createMonolith(canvas: HTMLCanvasElement) {
         ringPrimaryScale: derived.ringFill,
         ringExtScale: derived.ringExtended ? 1 : 0.001,
         dialSpeed: derived.dialSpeed,
-        duration: 0.6,
+        orbitSpeed: derived.orbitSpeed,
+        orbitTilt: derived.orbitTilt,
+        coinHScale: derived.coinHActive ? 1.16 : 1,
+        coinRScale: derived.coinRActive ? 1.18 : 1,
+        envelopeFlapAngle: -derived.envelopeOpen * Math.PI * 0.86,
+        envelopeCardLift: derived.envelopeOpen * 0.24,
+        gleamScale: derived.gleamIntensity > 0.01 ? derived.gleamIntensity : 0.001,
+        gleamLift: derived.gleamIntensity * 0.44,
+        duration: 0.65,
         ease: 'expo.inOut',
         overwrite: 'auto',
       });
 
-      // Dial & Seal color emphasis
+      // Auto-close strongbox lid and deed after 5 seconds
+      if (derived.lidOpen > 0.05) {
+        lidAutoCloseTimer = window.setTimeout(() => {
+          gsap.to(pose, {
+            lidAngle: 0,
+            deedLift: 0,
+            envelopeFlapAngle: 0,
+            envelopeCardLift: 0,
+            gleamScale: 0.001,
+            gleamLift: 0,
+            duration: 0.85,
+            ease: 'power2.inOut',
+          });
+          if (sceneInput.lidOpen !== null && sceneInput.lidOpen > 0) {
+            sceneInput.lidOpen = 0;
+          }
+          lidAutoCloseTimer = null;
+        }, 5000);
+      }
+
+      // Dial & Envelope Wax Seal color emphasis
       const dialColor =
         sceneInput.status === 'Finalized'
           ? PALETTE.finalGreen
@@ -560,13 +863,25 @@ export function createMonolith(canvas: HTMLCanvasElement) {
       dialPlateMat.color.setHex(dialColor);
       needleMat.color.setHex(dialColor);
 
-      // Role focus highlight
-      sealH.discMat.emissiveIntensity =
-        sceneInput.roleFocus === 'heir' || derived.sealH ? 0.18 : 0.05;
-      sealR.discMat.emissiveIntensity =
-        sceneInput.roleFocus === 'rival' || derived.sealR ? 0.2 : 0.05;
-      dialPlateMat.emissiveIntensity =
-        sceneInput.roleFocus === 'owner' ? 0.22 : 0.06;
+      const flapSealColor =
+        sceneInput.status === 'Finalized'
+          ? PALETTE.finalGreen
+          : sceneInput.status === 'Challenged' || sceneInput.outcome === 'Busted'
+            ? PALETTE.rivalRed
+            : sceneInput.status === 'Pending'
+              ? PALETTE.heirMustard
+              : PALETTE.ownerBlue;
+      flapSealMat.color.setHex(flapSealColor);
+      flapSealMat.emissive.setHex(flapSealColor);
+
+      // Role focus & active seal highlight on strongbox & orbiting coins
+      const heirEmissive = sceneInput.roleFocus === 'heir' || derived.sealH ? 0.2 : 0.05;
+      const rivalEmissive = sceneInput.roleFocus === 'rival' || derived.sealR ? 0.22 : 0.05;
+      sealH.discMat.emissiveIntensity = heirEmissive;
+      coinH.coinDiscMat.emissiveIntensity = heirEmissive;
+      sealR.discMat.emissiveIntensity = rivalEmissive;
+      coinR.coinDiscMat.emissiveIntensity = rivalEmissive;
+      dialPlateMat.emissiveIntensity = sceneInput.roleFocus === 'owner' ? 0.22 : 0.06;
 
       if (sceneInput.status === 'Challenged') {
         shakeStart = seconds - 0.15;
@@ -577,19 +892,19 @@ export function createMonolith(canvas: HTMLCanvasElement) {
       previousOutcome = sceneInput.outcome;
 
       if (previousOutcome === 'FalseAlarm') {
-        // Lid bounces shut and Seal H pops loose
+        // Lid bounces shut, Seal H pops loose, and Koin H recoils outward
         gsap.fromTo(
           pose,
-          { boxBounceY: 0.14, lidAngle: -0.22 },
-          { boxBounceY: 0, lidAngle: 0, duration: 0.6, ease: 'expo.inOut' },
+          { boxBounceY: 0.14, lidAngle: -0.22, coinHRadiusOffset: 0.36 },
+          { boxBounceY: 0, lidAngle: 0, coinHRadiusOffset: 0, duration: 0.65, ease: 'expo.inOut' },
         );
       } else if (previousOutcome === 'Busted') {
-        // Lid bounces + 0.3s camera shake + Seal R clamp flash
+        // Lid bounces + 0.3s camera shake + Seal R clamp flash + Koin R surges
         shakeStart = seconds;
         gsap.fromTo(
           pose,
-          { boxBounceY: -0.12, clampScale: 1 },
-          { boxBounceY: 0, clampScale: 1, duration: 0.6, ease: 'expo.inOut' },
+          { boxBounceY: -0.12, clampScale: 1, coinRScale: 1.34, coinRRadiusOffset: -0.22 },
+          { boxBounceY: 0, clampScale: 1, coinRScale: 1.18, coinRRadiusOffset: 0, duration: 0.65, ease: 'expo.inOut' },
         );
       }
     }
@@ -629,12 +944,52 @@ export function createMonolith(canvas: HTMLCanvasElement) {
 
     // Screen-to-world placement matching active section anchor
     const viewHeight = 2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * 10.2;
-    const scale = ((place.size / Math.max(1, height)) * viewHeight) / 3.9;
+    const scale = ((place.size / Math.max(1, height)) * viewHeight) / 4.55;
     const targetX = (place.x / Math.max(1, width) - 0.5) * viewHeight * camera.aspect;
     const targetY = (0.5 - place.y / Math.max(1, height)) * viewHeight + pose.boxBounceY;
 
-    root.position.x = THREE.MathUtils.lerp(root.position.x, targetX, 0.16);
-    root.position.y = THREE.MathUtils.lerp(root.position.y, targetY, 0.16);
+    // Detect section anchor transition and route through peripheral side arc (avoids center text!)
+    if (place.anchorId && place.anchorId !== lastAnchorId) {
+      if (lastAnchorId !== null) {
+        arcStartX = root.position.x;
+        arcStartY = root.position.y;
+        arcStartTime = seconds;
+        arcT = 0;
+        const sideMargin = viewHeight * camera.aspect * 0.44;
+        if (targetX < -0.2) {
+          // Destination is on the left (e.g. Cockpit, Mechanism): swoop wide via the left side
+          arcWaypointX = -sideMargin;
+        } else if (targetX > 0.2) {
+          // Destination is on the right (e.g. Hero): swoop wide via the right side
+          arcWaypointX = sideMargin;
+        } else {
+          // Destination is center: approach from the side currently occupied
+          arcWaypointX = root.position.x >= 0 ? sideMargin : -sideMargin;
+        }
+      }
+      lastAnchorId = place.anchorId;
+    }
+
+    if (arcT < 1) {
+      arcT = Math.min(1, (seconds - arcStartTime) / ARC_DURATION);
+      // Smooth cubic ease in-out
+      const ease = arcT < 0.5 ? 4 * arcT * arcT * arcT : 1 - Math.pow(-2 * arcT + 2, 3) / 2;
+      const oneMinusE = 1 - ease;
+
+      // Quadratic Bezier curve for X that swoops along the outer side edge:
+      // B(t) = (1-t)^2 * P0 + 2*(1-t)*t * P1 + t^2 * P2
+      const curvedX =
+        oneMinusE * oneMinusE * arcStartX +
+        2 * oneMinusE * ease * arcWaypointX +
+        ease * ease * targetX;
+      const curvedY = THREE.MathUtils.lerp(arcStartY, targetY, ease);
+
+      root.position.x = curvedX;
+      root.position.y = curvedY;
+    } else {
+      root.position.x = THREE.MathUtils.lerp(root.position.x, targetX, 0.16);
+      root.position.y = THREE.MathUtils.lerp(root.position.y, targetY, 0.16);
+    }
     root.scale.setScalar(scale * intro.scale);
 
     // Rotation combines base isometric angle + scroll progress (<= 0.55 rad) + pointer parallax (<= 0.08 rad) + user drag
@@ -655,7 +1010,6 @@ export function createMonolith(canvas: HTMLCanvasElement) {
 
     sealH.group.position.z = pose.sealHDepth;
     if (pose.sealHDepth > 0.79) {
-      // Unlocked seal rotates freely and gently
       sealH.group.rotation.z += delta * 0.28;
     } else {
       sealH.group.rotation.z = pose.sealHRot;
@@ -678,6 +1032,46 @@ export function createMonolith(canvas: HTMLCanvasElement) {
       needlePivot.rotation.z = 0;
     }
 
+    // Apply Orbiting Seal Coins (Koin O, Koin H & Koin R) along the inclined Torus trajectory
+    orbitSystemGroup.rotation.z = -0.22 - (pose.orbitTilt - 0.34) * 0.6;
+    orbitSpinnerGroup.rotation.z += delta * pose.orbitSpeed;
+
+    coinH.coinAnchor.position.set(ORBIT_RADIUS + pose.coinHRadiusOffset, 0, 0);
+    coinH.coinAnchor.scale.setScalar(pose.coinHScale);
+    coinH.coinSpin.rotation.y += delta * (0.9 + pose.orbitSpeed * 0.45);
+
+    const rRadius = ORBIT_RADIUS + pose.coinRRadiusOffset;
+    coinR.coinAnchor.position.set(
+      Math.cos((Math.PI * 2) / 3) * rRadius,
+      Math.sin((Math.PI * 2) / 3) * rRadius,
+      0,
+    );
+    coinR.coinAnchor.scale.setScalar(pose.coinRScale);
+    coinR.coinSpin.rotation.y -= delta * (0.9 + pose.orbitSpeed * 0.45);
+
+    coinO.coinAnchor.position.set(
+      Math.cos((Math.PI * 4) / 3) * ORBIT_RADIUS,
+      Math.sin((Math.PI * 4) / 3) * ORBIT_RADIUS,
+      0,
+    );
+    coinO.coinAnchor.scale.setScalar(sceneInput.roleFocus === 'owner' ? 1.18 : 1.04);
+    coinO.coinSpin.rotation.y += delta * (0.85 + pose.orbitSpeed * 0.4);
+
+    // Apply Floating Deed Envelope (Amplop Akta) + Gold Gleam (#F5D061)
+    const hoverWave = Math.sin(seconds * 2.1) * 0.055;
+    envelopeGroup.position.y = 1.54 + pose.deedLift * 0.35 + hoverWave;
+    envelopeGroup.rotation.z = Math.sin(seconds * 1.4) * 0.035;
+
+    flapPivot.rotation.x = pose.envelopeFlapAngle;
+    envCardGroup.position.y = 0.02 + pose.envelopeCardLift;
+
+    gleamGroup.position.y = 0.28 + pose.gleamLift;
+    gleamGroup.scale.setScalar(Math.max(0.001, pose.gleamScale));
+    if (pose.gleamScale > 0.05) {
+      gleamCoreMesh.rotation.y += delta * 1.6;
+      gleamRaysGroup.rotation.z -= delta * 0.85;
+    }
+
     // 0.3s Camera shake on Busted / Challenged impact
     const shakeElapsed = seconds - shakeStart;
     const shakeOffset =
@@ -698,6 +1092,10 @@ export function createMonolith(canvas: HTMLCanvasElement) {
       window.removeEventListener('pointerup', onPointerEnd);
       window.removeEventListener('pointercancel', onPointerEnd);
       window.removeEventListener('keydown', onKeyDown);
+      if (lidAutoCloseTimer !== null) {
+        window.clearTimeout(lidAutoCloseTimer);
+        lidAutoCloseTimer = null;
+      }
       gsap.killTweensOf([pose, intro]);
       gradientMap.dispose();
       geometries.forEach(g => g.dispose());

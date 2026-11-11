@@ -17,9 +17,36 @@ export type LiveSnapshot = {
 };
 export const publicConfig = {
   nearRpc: import.meta.env.VITE_NEAR_RPC_URL || 'https://test.rpc.fastnear.com',
-  contractId: (import.meta.env.VITE_VAULT_CONTRACT_ID || '').trim(),
+  fallbackNearRpc: 'https://rpc.testnet.near.org',
+  contractId: (import.meta.env.VITE_VAULT_CONTRACT_ID || 'pog-mw835qrr-1c82b2-vault.testnet').trim(),
   sepoliaRpc: import.meta.env.VITE_SEPOLIA_RPC_URL || 'https://ethereum-sepolia-rpc.publicnode.com',
+  mpcContractId: 'v1.signer-prod.testnet',
 };
+
+export interface PresetVault {
+  id: string;
+  labelEn: string;
+  labelId: string;
+  derivedSepoliaSender?: string;
+}
+
+export const PRESET_VAULTS: PresetVault[] = [
+  {
+    id: 'pog-mw835qrr-1c82b2-vault.testnet',
+    labelEn: 'Vault #1 · Spite Backfired + Sepolia ETH Release',
+    labelId: 'Vault #1 · Kedengkian Berbalik + Rilis ETH Sepolia',
+    derivedSepoliaSender: '0xeDbe670f69552C1D87394A33eB3A21e090bb3116',
+  },
+  {
+    id: 'pog-mw83onmu-af46c1-vault.testnet',
+    labelEn: 'Vault #2 · Uncontested + Owner Withdrawal',
+    labelId: 'Vault #2 · Tanpa Tantangan + Penarikan Pemilik',
+  },
+];
+
+export function isValidTestnetAccount(accountId: string): boolean {
+  return /^(?:[a-z0-9]+(?:[-_.][a-z0-9]+)*\.testnet|[a-f0-9]{64})$/.test(accountId.trim());
+}
 export function publicEndpoint(raw: string): string {
   const url = new URL(raw);
   if (url.protocol !== 'https:' || url.username || url.password || url.search || url.hash) throw new Error('Public HTTPS endpoint required');
@@ -53,14 +80,111 @@ export function parseSnapshot(value: unknown): LiveSnapshot {
   }
   return v as unknown as LiveSnapshot;
 }
-/** Uses only provider view APIs. No Account, signer or key store is created. */
-export async function getVaultState(): Promise<LiveSnapshot> {
-  if (!publicConfig.contractId || !/^(?:[a-z0-9]+(?:[-_.][a-z0-9]+)*\.testnet|[a-f0-9]{64})$/.test(publicConfig.contractId)) throw new Error('Configure a testnet account');
+export function decodeCallResult(raw: unknown): unknown {
+  const payload = record(raw);
+  if (!Array.isArray(payload.result) || !payload.result.every(b => Number.isInteger(b) && b >= 0 && b <= 255)) {
+    throw new Error('Invalid RPC query result bytes');
+  }
+  const text = new TextDecoder().decode(new Uint8Array(payload.result));
+  return JSON.parse(text);
+}
+async function withTestnetProvider<T>(fn: (provider: { query: (params: Record<string, unknown>) => Promise<unknown>; getNetworkId: () => Promise<string> }) => Promise<T>): Promise<T> {
   const { providers } = await import('near-api-js');
-  const provider = new providers.JsonRpcProvider({ url: publicEndpoint(publicConfig.nearRpc) }, { retries: 1, wait: 500, backoff: 1 });
-  if (await provider.getNetworkId() !== 'testnet') throw new Error('NEAR Testnet required');
-  const result = await provider.callFunction(publicConfig.contractId, 'get_vault_state', {}, { finality: 'final' });
-  return parseSnapshot(result);
+  const endpoints = Array.from(new Set([publicEndpoint(publicConfig.nearRpc), publicEndpoint(publicConfig.fallbackNearRpc)]));
+  let lastErr: unknown;
+  for (const url of endpoints) {
+    try {
+      const provider = new providers.JsonRpcProvider({ url }, { retries: 1, wait: 400, backoff: 1 });
+      if (await provider.getNetworkId() !== 'testnet') throw new Error('NEAR Testnet required');
+      return await fn(provider as unknown as { query: (params: Record<string, unknown>) => Promise<unknown>; getNetworkId: () => Promise<string> });
+    } catch (err) {
+      lastErr = err;
+    }
+  }
+  throw lastErr instanceof Error ? lastErr : new Error('NEAR Testnet RPC unavailable');
+}
+
+/** Uses only provider view APIs without Node Buffer globals. No Account, signer or key store is created. */
+export async function getVaultState(customContractId?: string): Promise<LiveSnapshot> {
+  const targetId = (customContractId ?? publicConfig.contractId).trim();
+  if (!targetId || !isValidTestnetAccount(targetId)) throw new Error('Configure a testnet account');
+  return withTestnetProvider(async provider => {
+    const raw = await provider.query({
+      finality: 'final',
+      request_type: 'call_function',
+      account_id: targetId,
+      method_name: 'get_vault_state',
+      args_base64: 'e30=',
+    });
+    return parseSnapshot(decodeCallResult(raw));
+  });
+}
+
+export async function getAccountBalanceYocto(accountId: string): Promise<bigint> {
+  const targetId = accountId.trim();
+  if (!targetId || !isValidTestnetAccount(targetId)) throw new Error('Invalid testnet account');
+  return withTestnetProvider(async provider => {
+    const raw = await provider.query({
+      finality: 'final',
+      request_type: 'view_account',
+      account_id: targetId,
+    });
+    const obj = record(raw);
+    decimal(obj.amount);
+    return BigInt(obj.amount);
+  });
+}
+
+export interface ReleasePreviewResult {
+  nonce: string;
+  value_wei: string;
+  max_fee_per_gas: string;
+  max_priority_fee_per_gas: string;
+  gas_limit: string;
+  unsigned_tx_hex: string;
+  payload_hex: string;
+}
+
+export async function previewEthReleaseOnChain(
+  params: {
+    nonce: string;
+    value_wei: string;
+    max_fee_per_gas: string;
+    max_priority_fee_per_gas: string;
+    gas_limit: string;
+  },
+  customContractId?: string,
+): Promise<ReleasePreviewResult> {
+  const targetId = (customContractId ?? publicConfig.contractId).trim();
+  if (!targetId || !isValidTestnetAccount(targetId)) throw new Error('Configure a testnet account');
+  for (const k of ['nonce', 'value_wei', 'max_fee_per_gas', 'max_priority_fee_per_gas', 'gas_limit'] as const) {
+    decimal(params[k]);
+  }
+  const argsJson = JSON.stringify(params);
+  const argsBytes = new TextEncoder().encode(argsJson);
+  let binary = '';
+  for (let i = 0; i < argsBytes.length; i++) binary += String.fromCharCode(argsBytes[i]);
+  const argsBase64 = btoa(binary);
+
+  return withTestnetProvider(async provider => {
+    const raw = await provider.query({
+      finality: 'final',
+      request_type: 'call_function',
+      account_id: targetId,
+      method_name: 'preview_eth_release',
+      args_base64: argsBase64,
+    });
+    const decoded = record(decodeCallResult(raw));
+    for (const k of ['nonce', 'value_wei', 'max_fee_per_gas', 'max_priority_fee_per_gas', 'gas_limit']) {
+      decimal(decoded[k]);
+    }
+    for (const k of ['unsigned_tx_hex', 'payload_hex']) {
+      if (typeof decoded[k] !== 'string' || !/^(?:0x)?(?:[0-9a-fA-F]{2})+$/.test(decoded[k] as string)) {
+        throw new Error('Invalid preview payload');
+      }
+    }
+    return decoded as unknown as ReleasePreviewResult;
+  });
 }
 export function toVault(v: LiveSnapshot): Vault {
   const convert = (funds: Record<keyof Funds, string>): Funds => ({ owner: BigInt(funds.owner), heir: BigInt(funds.heir), rival: BigInt(funds.rival) });

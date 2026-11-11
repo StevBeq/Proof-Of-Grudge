@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ethAddress, parseProofManifest, parseSnapshot, publicEndpoint, safeProof, toVault } from './nearClient';
+import { decodeCallResult, ethAddress, parseProofManifest, parseSnapshot, publicEndpoint, safeProof, toVault } from './nearClient';
 const snapshot = {
   owner: 'owner.testnet', heir: 'heir.testnet', rival: 'rival.testnet', heir_eth_address: Array(20).fill(0),
   state: { status: 'Pending', claimed_at_ns: '121000000000', deadline_ns: '181000000000' },
@@ -19,6 +19,12 @@ describe('flat get_vault_state response', () => {
     expect(() => parseSnapshot({ ...snapshot, state: { status: 'Busted' } })).toThrow();
     expect(() => parseSnapshot({ ...snapshot, heir_eth_address: Array(20).fill(256) })).toThrow();
     expect(() => parseSnapshot({ ...snapshot, credits: { owner: '-1' } })).toThrow();
+  });
+  it('decodes raw query byte arrays without requiring Node Buffer in the browser', () => {
+    const bytes = Array.from(new TextEncoder().encode(JSON.stringify(snapshot)));
+    const parsed = parseSnapshot(decodeCallResult({ result: bytes }));
+    expect(parsed.owner).toBe('owner.testnet');
+    expect(() => decodeCallResult({ result: 'not-an-array' })).toThrow();
   });
 });
 describe('canonical script evidence manifest', () => {

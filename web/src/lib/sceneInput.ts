@@ -43,10 +43,16 @@ export interface DerivedStrongboxPose {
   clampLocked: boolean;
   dialSpeed: number;
   dialAlert: boolean;
+  orbitSpeed: number;
+  orbitTilt: number;
+  coinHActive: boolean;
+  coinRActive: boolean;
+  envelopeOpen: number;
+  gleamIntensity: number;
 }
 
 export function deriveStrongboxPose(state: SceneInputState = sceneInput): DerivedStrongboxPose {
-  const { status, outcome } = state;
+  const { status, outcome, roleFocus } = state;
 
   const defaultSealH: 0 | 1 =
     status === 'Pending' || status === 'Challenged' || status === 'Finalized' ? 1 : 0;
@@ -90,6 +96,43 @@ export function deriveStrongboxPose(state: SceneInputState = sceneInput): Derive
           : 0;
   const dialAlert = status === 'Pending' || status === 'Challenged';
 
+  const orbitSpeed =
+    status === 'Idle'
+      ? 0.42
+      : status === 'Pending'
+        ? 1.45
+        : status === 'Challenged'
+          ? 2.35
+          : 0.28;
+
+  const orbitTilt =
+    status === 'Challenged'
+      ? 0.52
+      : status === 'Pending'
+        ? 0.42
+        : 0.34;
+
+  const coinHActive = sealH === 1 || roleFocus === 'heir';
+  const coinRActive = sealR === 1 || roleFocus === 'rival';
+
+  const envelopeOpen =
+    status === 'Finalized'
+      ? outcome === 'SpiteBackfired'
+        ? 1
+        : 0.9
+      : lidOpen > 0.15
+        ? lidOpen
+        : 0;
+
+  const gleamIntensity =
+    status === 'Finalized'
+      ? outcome === 'SpiteBackfired'
+        ? 1
+        : 0.88
+      : lidOpen > 0.35
+        ? lidOpen
+        : 0;
+
   return {
     sealH,
     sealR,
@@ -99,6 +142,12 @@ export function deriveStrongboxPose(state: SceneInputState = sceneInput): Derive
     clampLocked,
     dialSpeed,
     dialAlert,
+    orbitSpeed,
+    orbitTilt,
+    coinHActive,
+    coinRActive,
+    envelopeOpen,
+    gleamIntensity,
   };
 }
 
@@ -129,7 +178,7 @@ export function nudgeSceneRotation(deltaYaw: number, deltaPitch = 0): void {
   sceneInput.hasInteracted = true;
 }
 
-const DEFAULT_ANCHOR_IDS = ['hero-scene', 'mechanism-scene', 'cockpit-scene'] as const;
+const DEFAULT_ANCHOR_IDS = ['portal-scene', 'hero-scene', 'mechanism-scene', 'divider-scene', 'cockpit-scene'] as const;
 
 export function scenePlacement(): {
   x: number;
@@ -141,6 +190,24 @@ export function scenePlacement(): {
 } {
   const width = window.innerWidth;
   const height = window.innerHeight;
+
+  // When the opening portal is mounted, always lock the 3D strongbox to #portal-scene
+  // so it never competes with #hero-scene or other underlying page sections.
+  const portalNode = document.getElementById('portal-scene');
+  if (portalNode) {
+    const rect = portalNode.getBoundingClientRect();
+    if (rect.width > 0 && rect.height > 0) {
+      return {
+        x: rect.left + rect.width / 2,
+        y: rect.top + rect.height / 2,
+        size: Math.min(rect.width, rect.height),
+        distance: 0,
+        visible: true,
+        anchorId: 'portal-scene',
+      };
+    }
+  }
+
   const customNodes = Array.from(document.querySelectorAll<HTMLElement>('[data-scene-anchor]'));
   const defaultNodes = DEFAULT_ANCHOR_IDS.map(id => document.getElementById(id)).filter(
     (el): el is HTMLElement => el !== null,

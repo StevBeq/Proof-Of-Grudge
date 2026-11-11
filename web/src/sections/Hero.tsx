@@ -1,17 +1,7 @@
-import { useEffect, useState } from 'react';
 import type { Copy } from '../lib/copy';
-import { resetSceneRotation, sceneInput } from '../lib/sceneInput';
+import { resetSceneRotation } from '../lib/sceneInput';
 
 export function Hero({ c }: { c: Copy }) {
-  const [hidden, setHidden] = useState(sceneInput.hasInteracted);
-
-  useEffect(() => {
-    const timer = window.setInterval(() => {
-      if (sceneInput.hasInteracted && !hidden) setHidden(true);
-    }, 400);
-    return () => window.clearInterval(timer);
-  }, [hidden]);
-
   return (
     <section className="hero section" id="hero" aria-labelledby="hero-title">
       <div className="hero-copy reveal">
@@ -33,14 +23,15 @@ export function Hero({ c }: { c: Copy }) {
           </div>
         </dl>
         <div className="hero-actions">
-          <a className="button-primary" href="#cockpit">{c.open}</a>
+          <a className="button-primary" href="#dossier">{c.open}</a>
           <a className="text-link" href="#outcomes">{c.theory}</a>
         </div>
+        <p className="scroll-hint caption" aria-hidden="true"><span className="scroll-hint-line" />{c.scrollHint}</p>
       </div>
-      <div className="hero-object reveal">
+      <div className="hero-object">
         <div id="hero-scene" className="scene-anchor" role="img" aria-label={c.scene} />
         <div className="hero-scene-controls">
-          {!hidden && <span className="drag-hint">{c.dragHint}</span>}
+          <span className="drag-hint">{c.dragHint}</span>
           <button type="button" className="button-secondary hero-reset" onClick={() => resetSceneRotation()}>
             {c.resetView}
           </button>
