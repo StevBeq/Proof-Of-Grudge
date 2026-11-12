@@ -65,6 +65,40 @@ button:hover:not(:disabled), .button-secondary:hover { background: var(--surface
 button:disabled { cursor: not-allowed; color: var(--muted); background: transparent; box-shadow: none; }
 button:focus-visible, a:focus-visible, input:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
 ::selection { color: var(--paper); background: var(--ink); }
+
+/* Prevent accidental text selection during 3D rotation & interactive dragging */
+body.is-scene-dragging,
+body.is-scene-dragging * {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+}
+
+/* Base UI & presentation elements: never trigger accidental text selection on drag */
+.hero,
+.hero-title,
+.hero-intro,
+.evidence,
+.evidence-number,
+.hero-actions,
+.hero-footer-meta,
+.hero-object,
+.hero-legend,
+.hero-scene-controls,
+.scene-anchor,
+.topbar,
+.case-kicker,
+.chapter-mark,
+.cockpit-visual,
+.cockpit-toolbar,
+.role-toolbar,
+.divider-stage,
+.dossier-card,
+.mechanism-card,
+.limits-card,
+.ge-footer-stage {
+  user-select: none;
+  -webkit-user-select: none;
+}
 input { caret-color: var(--ink); }
 input::placeholder { color: var(--muted); opacity: 1; }
 input[type='text'] {
@@ -442,7 +476,7 @@ small { font-size: .75rem; }
   grid-template-columns: 1.15fr .85fr;
   align-items: center;
   column-gap: 2rem;
-  padding-block: clamp(24px, 6vh, 56px);
+  padding-block: clamp(10px, 2.5vh, 26px);
   position: relative;
   overflow: visible;
 }
@@ -589,6 +623,69 @@ small { font-size: .75rem; }
 .pose-Finalized .core-left { transform: translateX(-26px); }
 .pose-Finalized .core-right { transform: translateX(26px); }
 .scene-emergency { position: fixed; right: 5%; top: 20%; width: 35vw; z-index: 0; pointer-events: none; }
+
+@media (min-width: 901px) {
+  /* Hide redundant case file kicker & tech tags on desktop so Hero fits 100% desktop viewport without scrolling (Per User Request 3) */
+  .hero .case-kicker,
+  .hero-spec-tag,
+  .hero-network {
+    display: none !important;
+  }
+
+  .hero-copy h1 {
+    font-size: clamp(2.8rem, 4.4vw, 4.6rem);
+    line-height: .93;
+    margin-bottom: 0;
+  }
+
+  .hero-intro {
+    font-size: 1rem;
+    line-height: 1.45;
+    max-width: 44ch;
+    margin-top: .85rem;
+  }
+
+  .evidence {
+    margin: 1.15rem 0 0;
+  }
+
+  .evidence > div {
+    padding: .55rem .5rem .55rem 0;
+  }
+
+  .evidence-number {
+    font-size: clamp(1.75rem, 2.7vw, 2.45rem);
+    margin: .25rem 0 0;
+  }
+
+  .hero-actions {
+    margin-top: 1.15rem;
+    gap: 1.1rem;
+  }
+
+  .hero-footer-meta {
+    margin-top: .85rem;
+  }
+
+  .hero-object .scene-anchor {
+    height: clamp(240px, 25vw, 320px);
+  }
+
+  .hero-scene-controls {
+    margin-top: .35rem;
+    min-height: 36px;
+  }
+
+  .hero-legend {
+    margin-top: .35rem;
+    font-size: .8125rem;
+  }
+
+  .hero-object .caption {
+    margin-top: .35rem;
+    font-size: .75rem;
+  }
+}
 
 /* ---------- Section 02: Dossier & Mechanism Forensic Case File Zone ---------- */
 .case-dossier-zone {
@@ -1335,6 +1432,17 @@ small { font-size: .75rem; }
     position: sticky;
     top: 94px;
     height: calc(100dvh - 94px);
+  }
+}
+
+/* Scroll Reading Buffer: Gives user a comfortable pause to read Section 06 before footer curtain rises */
+.limits-reading-buffer {
+  height: clamp(65vh, 80vh, 100vh);
+  pointer-events: none;
+}
+@media (max-width: 900px) {
+  .limits-reading-buffer {
+    display: none;
   }
 }
 .limits-header {

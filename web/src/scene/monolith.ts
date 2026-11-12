@@ -707,6 +707,13 @@ export function createMonolith(canvas: HTMLCanvasElement) {
     if (isInteractiveTarget(event.target)) return;
     if (!isPointInsideSceneAnchor(event.clientX, event.clientY)) return;
 
+    // Prevent accidental text selection when starting a 3D model rotation drag
+    if (event.cancelable) {
+      event.preventDefault();
+    }
+    window.getSelection()?.removeAllRanges();
+    document.body.classList.add('is-scene-dragging');
+
     activePointerId = event.pointerId;
     startX = event.clientX;
     startY = event.clientY;
@@ -728,6 +735,7 @@ export function createMonolith(canvas: HTMLCanvasElement) {
       if (Math.abs(totalDy) > Math.abs(totalDx) && Math.abs(totalDy) > 6) {
         dragMode = 'scrolling';
         activePointerId = null;
+        document.body.classList.remove('is-scene-dragging');
         return;
       }
       if (Math.abs(totalDx) > 6 && Math.abs(totalDx) > Math.abs(totalDy)) {
@@ -738,6 +746,9 @@ export function createMonolith(canvas: HTMLCanvasElement) {
     }
 
     if (dragMode !== 'dragging') return;
+
+    // Keep text selection cleared while rotating 3D models across sections
+    window.getSelection()?.removeAllRanges();
 
     const dx = event.clientX - lastDragX;
     const dy = event.clientY - lastDragY;
@@ -761,6 +772,7 @@ export function createMonolith(canvas: HTMLCanvasElement) {
     if (activePointerId !== null && event.pointerId === activePointerId) {
       activePointerId = null;
       dragMode = 'idle';
+      document.body.classList.remove('is-scene-dragging');
     }
   };
 
@@ -781,7 +793,7 @@ export function createMonolith(canvas: HTMLCanvasElement) {
     }
   };
 
-  window.addEventListener('pointerdown', onPointerDown, { passive: true });
+  window.addEventListener('pointerdown', onPointerDown, { passive: false });
   window.addEventListener('pointermove', onPointerMove, { passive: true });
   window.addEventListener('pointerup', onPointerEnd, { passive: true });
   window.addEventListener('pointercancel', onPointerEnd, { passive: true });

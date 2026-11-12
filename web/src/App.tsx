@@ -644,6 +644,8 @@ export default function App() {
       <Cockpit c={c} locale={locale} onScene={onScene} role={cockpitRole} onRoleChange={setCockpitRole} scenarioRequest={scenarioRequest} entered={cockpitEntered} />
       <BondLab c={c} locale={locale} />
       <Limits c={c} />
+      {/* Scroll Reading Buffer: Gives user a comfortable pause to read Section 06 before footer curtain rises */}
+      <div className="limits-reading-buffer" aria-hidden="true" />
       <FooterLoop c={c} locale={locale} onLoopToTop={handleLoopToTop} />
     </main>
   </div>;
