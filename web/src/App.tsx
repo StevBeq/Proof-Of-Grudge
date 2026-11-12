@@ -643,10 +643,8 @@ export default function App() {
       </div>
       <Cockpit c={c} locale={locale} onScene={onScene} role={cockpitRole} onRoleChange={setCockpitRole} scenarioRequest={scenarioRequest} entered={cockpitEntered} />
       <BondLab c={c} locale={locale} />
-      {/* Limits & Rising Finale Curtain (Limits sits pinned inside track while stage rises over it) */}
-      <FooterLoop c={c} locale={locale} onLoopToTop={handleLoopToTop}>
-        <Limits c={c} />
-      </FooterLoop>
+      <Limits c={c} />
+      <FooterLoop c={c} locale={locale} onLoopToTop={handleLoopToTop} />
     </main>
   </div>;
 }

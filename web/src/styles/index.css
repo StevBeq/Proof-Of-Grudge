@@ -333,8 +333,8 @@ small { font-size: .75rem; }
   line-height: 1;
 }
 .portal-keyhole-anchor {
-  width: clamp(190px, 24vmin, 240px);
-  height: clamp(190px, 24vmin, 240px);
+  width: clamp(205px, 25vmin, 250px);
+  height: clamp(205px, 25vmin, 250px);
   flex-shrink: 0;
   transform: translateY(8px);
 }
@@ -1320,9 +1320,22 @@ small { font-size: .75rem; }
 .limits-section {
   width: min(1140px, calc(100% - 48px));
   margin-inline: auto;
+  min-height: calc(100dvh - 94px);
   display: flex;
   flex-direction: column;
   justify-content: center;
+  padding-block: clamp(2.5rem, 5vh, 4rem);
+  scroll-margin-top: 100px;
+  position: relative;
+  z-index: 10;
+}
+
+@media (min-width: 901px) and (min-height: 680px) {
+  .limits-section {
+    position: sticky;
+    top: 94px;
+    height: calc(100dvh - 94px);
+  }
 }
 .limits-header {
   margin-bottom: 1.35rem;
@@ -2054,30 +2067,15 @@ small { font-size: .75rem; }
 /* ---------- Architectural [G] & [E] CAD Caliper Finale & Loop Footer ---------- */
 .ge-footer-track {
   position: relative;
-  height: 280dvh;
-  z-index: 35;
-  background: var(--paper);
+  height: 240dvh;
+  z-index: 40;
+  background: transparent;
 }
 
-/* Layer 1 (Stationary Underneath): Limits Section */
-.ge-limits-pinned {
-  position: sticky;
-  top: 0;
-  height: 100dvh;
-  min-height: 560px;
-  z-index: 10;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  background: var(--paper);
-  padding-top: max(40px, 4vh);
-}
-
-/* Layer 2 (The ONLY Rising Curtain Layer): Architectural Finale Stage */
+/* Rising Architectural Finale Stage Curtain */
 .ge-footer-stage {
   position: sticky;
   top: 0;
-  margin-top: -100dvh;
   z-index: 45;
   height: 100dvh;
   min-height: 560px;

@@ -86,12 +86,10 @@ export function FooterLoop({
   c,
   locale,
   onLoopToTop,
-  children,
 }: {
   c: Copy;
   locale: Locale;
   onLoopToTop: () => void;
-  children?: React.ReactNode;
 }) {
   const trackRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLElement>(null);
@@ -184,9 +182,6 @@ export function FooterLoop({
     const ctx = gsap.context(() => {
       const midBlocks = gsap.utils.toArray<HTMLElement>('[data-mid-letter]', midLetters);
 
-      // Start: Stage is pushed completely off-screen at bottom (yPercent: 100)
-      gsap.set(stage, { yPercent: 100 });
-
       // Letters: [G] and [E] locked close together in the center around Gold H caliper
       gsap.set(gWrap, { xPercent: -50, yPercent: -50, x: -82, scale: 1 });
       gsap.set(eWrap, { xPercent: -50, yPercent: -50, x: 82, scale: 1 });
@@ -202,11 +197,7 @@ export function FooterLoop({
           onUpdate: self => {
             if (loopingRef.current) return;
             const p = self.progress;
-
-            // Phase 1 (0.00 to 0.38): The Finale UI is rising up and covering Limits.
-            // Progress bar stays strictly 0% until UI fully takes over screen!
-            const activeP = Math.max(0, Math.min(1, (p - 0.38) / 0.62));
-            const pct = Math.round(activeP * 100);
+            const pct = Math.min(100, Math.round(p * 100));
 
             if (progressFillRef.current) {
               progressFillRef.current.style.width = `${pct}%`;
@@ -214,26 +205,13 @@ export function FooterLoop({
             if (pctBadgeRef.current) {
               pctBadgeRef.current.textContent = `${String(pct).padStart(2, '0')}%`;
             }
-            if (activeP >= 0.985 && !loopingRef.current) {
+            if (p >= 0.985 && !loopingRef.current) {
               runSmoothLoop();
             }
           },
         },
       });
 
-      // 1. Stage rises from yPercent 100 to 0 (0.00 to 0.38)
-      // Physically ascends over the pinned Limits section like a single rising curtain!
-      tl.to(
-        stage,
-        {
-          yPercent: 0,
-          ease: 'none',
-          duration: 0.38,
-        },
-        0,
-      );
-
-      // 2. Once stage is fully covering viewport (0.42 to 0.92):
       // [G] and [E] CAD calipers pull apart to outer flanks, revealing R - U - D - G
       tl.to(
         gWrap,
@@ -243,7 +221,7 @@ export function FooterLoop({
           ease: 'power2.inOut',
           duration: 0.44,
         },
-        0.44,
+        0.02,
       );
 
       tl.to(
@@ -254,7 +232,7 @@ export function FooterLoop({
           ease: 'power2.inOut',
           duration: 0.44,
         },
-        0.44,
+        0.02,
       );
 
       if (centerSeal) {
@@ -267,7 +245,7 @@ export function FooterLoop({
             ease: 'power2.inOut',
             duration: 0.28,
           },
-          0.44,
+          0.02,
         );
       }
 
@@ -281,7 +259,7 @@ export function FooterLoop({
           ease: 'back.out(1.35)',
           duration: 0.4,
         },
-        0.52,
+        0.1,
       );
     }, track);
 
@@ -311,14 +289,7 @@ export function FooterLoop({
       </div>
 
       <div className="ge-footer-track" ref={trackRef}>
-        {/* Layer 1 (Stationary Underneath): Limits Section */}
-        {children && (
-          <div className="ge-limits-pinned" aria-label="Protocol Limits">
-            {children}
-          </div>
-        )}
-
-        {/* Layer 2 (The ONLY Rising Curtain Layer): Architectural Finale */}
+        {/* Architectural Finale Rising Curtain Stage */}
         <footer className="ge-footer-stage" ref={stageRef} aria-label="Proof-of-Grudge Architectural Finale">
           {/* Top Archival Blueprint Header with Interactive Protocol Telemetry */}
           <div className="ge-footer-topbar">
