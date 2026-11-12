@@ -463,7 +463,7 @@ export default function App() {
     <MonolithCanvas status={status} />
     {curtain && <CaseCurtain c={c} locale={locale} onClose={() => setCurtain(false)} />}
     <main>
-      <Hero c={c} />
+      <Hero c={c} onOpenCockpit={triggerCockpitTeleport} />
       <Dossier c={c} role={cockpitRole} onSelect={handleDossier} />
       <Mechanism c={c} step={mechanismStep} onSelect={handleMechanism} />
       <Outcomes c={c} onPlay={handlePlay} />

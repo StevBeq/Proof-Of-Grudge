@@ -36,6 +36,7 @@ html {
 body {
   margin: 0;
   min-width: 320px;
+  overflow-x: hidden;
   background:
     repeating-linear-gradient(to bottom, transparent 0 27px, rgba(22, 19, 13, 0.045) 27px 28px),
     var(--paper);
@@ -95,7 +96,7 @@ small { font-size: .75rem; }
 .actor-owner { color: var(--owner); }
 .actor-heir { color: var(--heir); }
 .actor-rival { color: var(--rival); }
-.section { width: min(1100px, calc(100% - 80px)); margin-inline: auto; position: relative; z-index: 1; scroll-margin-top: 100px; }
+.section { width: min(1100px, calc(100% - 80px)); margin-inline: auto; position: relative; z-index: 2; scroll-margin-top: 100px; }
 .section-heading { margin-bottom: 2.5rem; max-width: 52rem; }
 .section-heading p { margin-top: 1rem; color: var(--ink-soft); }
 .case-kicker {
@@ -435,7 +436,86 @@ small { font-size: .75rem; }
 .language-toggle > span { color: var(--muted); }
 
 /* ---------- Hero ---------- */
-.hero { min-height: calc(100dvh - 94px); display: grid; grid-template-columns: 1.15fr .85fr; align-items: center; column-gap: 2rem; padding-block: clamp(24px, 6vh, 56px); }
+.hero {
+  min-height: calc(100dvh - 94px);
+  display: grid;
+  grid-template-columns: 1.15fr .85fr;
+  align-items: center;
+  column-gap: 2rem;
+  padding-block: clamp(24px, 6vh, 56px);
+  position: relative;
+  overflow: visible;
+}
+.hero.section {
+  z-index: auto;
+}
+.hero-bg-marquee {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100vw;
+  max-width: 100vw;
+  height: 100%;
+  min-height: clamp(340px, 45vh, 600px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+  user-select: none;
+}
+.hero-marquee-track {
+  display: flex;
+  white-space: nowrap;
+  font-family: 'Big Shoulders Display', sans-serif;
+  font-weight: 900;
+  font-size: clamp(6.5rem, 14vw, 12.5rem);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: transparent;
+  -webkit-text-stroke: 1.25px rgba(22, 19, 13, 0.045);
+  transform: rotate(-3deg) scale(1.05);
+  animation: hero-drift 65s linear infinite;
+  will-change: transform;
+}
+.hero-marquee-track span {
+  padding-right: 2.5rem;
+}
+@keyframes hero-drift {
+  0% { transform: rotate(-3deg) scale(1.05) translateX(0); }
+  100% { transform: rotate(-3deg) scale(1.05) translateX(-33.333%); }
+}
+
+.hero-tech-accents {
+  position: absolute;
+  inset: 8px;
+  pointer-events: none;
+  z-index: 2;
+}
+.hero-crosshair {
+  position: absolute;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 1.15rem;
+  font-weight: 300;
+  color: rgba(22, 19, 13, 0.35);
+  line-height: 1;
+}
+.hero-crosshair-tl { top: 2px; left: 2px; }
+.hero-crosshair-tr { top: 2px; right: 2px; }
+.hero-crosshair-bl { bottom: 2px; left: 2px; }
+.hero-crosshair-br { bottom: 2px; right: 2px; }
+.hero-spec-tag {
+  position: absolute;
+  top: 8px;
+  right: 26px;
+  font-size: 0.625rem;
+  letter-spacing: 0.12em;
+  color: rgba(22, 19, 13, 0.36);
+  text-transform: uppercase;
+}
+
 .hero-copy { position: relative; z-index: 2; }
 .hero-intro { font-size: 1.0625rem; max-width: 44ch; margin-top: 1.5rem; color: var(--ink-soft); }
 .evidence { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin: 2rem 0 0; padding: 0; border-top: 3px double var(--line); border-bottom: 1.5px solid var(--line); }
@@ -446,15 +526,60 @@ small { font-size: .75rem; }
 .button-primary { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 .button-primary:hover { background: var(--surface); color: var(--ink); }
 .text-link { font-size: .9375rem; text-decoration: underline; }
-.hero-object { min-width: 0; text-align: center; }
-.hero-object .scene-anchor { height: clamp(280px, 30vw, 400px); }
-.hero-scene-controls { display: flex; align-items: center; justify-content: space-between; gap: .8rem; margin-top: .6rem; min-height: 44px; }
+.hero-footer-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-top: clamp(1.75rem, 4vh, 2.75rem);
+  position: relative;
+  z-index: 2;
+}
+.hero-footer-meta .scroll-hint {
+  margin-top: 0;
+}
+.hero-network {
+  position: static;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: .75rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0;
+  padding-left: calc(2px + .75rem);
+}
+.hero-object { position: relative; min-width: 0; text-align: center; z-index: auto; }
+.hero-stage-glow {
+  position: absolute;
+  top: 48%;
+  left: 50%;
+  width: clamp(320px, 38vw, 500px);
+  height: clamp(320px, 38vw, 500px);
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(255, 252, 240, 0.95) 0%,
+    rgba(232, 180, 18, 0.16) 32%,
+    rgba(30, 79, 216, 0.08) 56%,
+    transparent 72%
+  );
+  filter: blur(34px);
+  pointer-events: none;
+  z-index: 0;
+  animation: hero-glow-breathe 8s ease-in-out infinite alternate;
+}
+@keyframes hero-glow-breathe {
+  0% { transform: translate(-50%, -50%) scale(0.92); opacity: 0.7; }
+  100% { transform: translate(-50%, -50%) scale(1.08); opacity: 1; }
+}
+.hero-object .scene-anchor { height: clamp(280px, 30vw, 400px); position: relative; z-index: 0; pointer-events: none; }
+.hero-scene-controls { position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: .8rem; margin-top: .6rem; min-height: 44px; }
 .drag-hint { font-family: 'IBM Plex Mono', monospace; font-size: .75rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
 .hero-reset { font-size: .8125rem; min-height: 40px; }
-.hero-legend { display: flex; justify-content: center; gap: 1.5rem; font-size: .875rem; font-weight: 600; margin-top: .5rem; }
-.hero-object .caption { margin-top: .6rem; margin-inline: auto; }
-.hero-network { position: absolute; bottom: 34px; left: 0; font-family: 'IBM Plex Mono', monospace; font-size: .75rem; letter-spacing: .1em; text-transform: uppercase; }
-.scene-layer { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+.hero-legend { position: relative; z-index: 2; display: flex; justify-content: center; gap: 1.5rem; font-size: .875rem; font-weight: 600; margin-top: .5rem; }
+.hero-object .caption { position: relative; z-index: 2; margin-top: .6rem; margin-inline: auto; }
+.scene-layer { position: fixed; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
 .scene-layer canvas { width: 100%; height: 100%; display: block; }
 .svg-position { position: absolute; inset: 0 auto auto 0; will-change: transform; }
 .svg-monolith { width: 100%; height: 100%; }

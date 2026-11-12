@@ -1,9 +1,33 @@
 import type { Copy } from '../lib/copy';
 import { resetSceneRotation } from '../lib/sceneInput';
+import { scrollToElementSmooth } from '../lib/smoothScroll';
 
-export function Hero({ c }: { c: Copy }) {
+export interface HeroProps {
+  c: Copy;
+  onOpenCockpit?: () => void;
+}
+
+export function Hero({ c, onOpenCockpit }: HeroProps) {
   return (
     <section className="hero section" id="hero" aria-labelledby="hero-title">
+      {/* Background Layer 1: Giant Outlined Typographic Watermark (Full Bleed Edge-to-Edge) */}
+      <div className="hero-bg-marquee" aria-hidden="true">
+        <div className="hero-marquee-track">
+          <span>PROOF-OF-GRUDGE · CASE FILE NO. 001 · TRI-SEAL APERTURE · ZERO TRUST · </span>
+          <span>PROOF-OF-GRUDGE · CASE FILE NO. 001 · TRI-SEAL APERTURE · ZERO TRUST · </span>
+          <span>PROOF-OF-GRUDGE · CASE FILE NO. 001 · TRI-SEAL APERTURE · ZERO TRUST · </span>
+        </div>
+      </div>
+
+      {/* Background Layer 2: Forensic Registration Marks & Case Spec Watermark */}
+      <div className="hero-tech-accents" aria-hidden="true">
+        <span className="hero-crosshair hero-crosshair-tl">+</span>
+        <span className="hero-crosshair hero-crosshair-tr">+</span>
+        <span className="hero-crosshair hero-crosshair-bl">+</span>
+        <span className="hero-crosshair hero-crosshair-br">+</span>
+        <span className="hero-spec-tag mono">EVIDENCE SPEC // SECP256K1 · EIP-1559 · MPC DOMAIN 0</span>
+      </div>
+
       <div className="hero-copy reveal">
         <p className="case-kicker">{c.caseFile}</p>
         <h1 id="hero-title">{c.headline1}<br /><span className="actor-rival">{c.headline2}</span></h1>
@@ -23,12 +47,33 @@ export function Hero({ c }: { c: Copy }) {
           </div>
         </dl>
         <div className="hero-actions">
-          <a className="button-primary" href="#dossier">{c.open}</a>
+          <a
+            className="button-primary"
+            href="#cockpit"
+            onClick={e => {
+              e.preventDefault();
+              if (onOpenCockpit) {
+                onOpenCockpit();
+              } else {
+                scrollToElementSmooth('#cockpit');
+              }
+            }}
+          >
+            {c.open}
+          </a>
           <a className="text-link" href="#outcomes">{c.theory}</a>
         </div>
-        <p className="scroll-hint caption" aria-hidden="true"><span className="scroll-hint-line" />{c.scrollHint}</p>
+        <div className="hero-footer-meta">
+          <p className="scroll-hint caption" aria-hidden="true">
+            <span className="scroll-hint-line" />
+            {c.scrollHint}
+          </p>
+          <p className="hero-network caption mono">{c.testnet}</p>
+        </div>
       </div>
       <div className="hero-object">
+        {/* Atmospheric Stage Glow behind 3D strongbox (Inspired by ref1) */}
+        <div className="hero-stage-glow" aria-hidden="true" />
         <div id="hero-scene" className="scene-anchor" role="img" aria-label={c.scene} />
         <div className="hero-scene-controls">
           <span className="drag-hint">{c.dragHint}</span>
@@ -43,7 +88,6 @@ export function Hero({ c }: { c: Copy }) {
         </div>
         <p className="caption">{c.heroNote}</p>
       </div>
-      <p className="hero-network caption">{c.testnet}</p>
     </section>
   );
 }
