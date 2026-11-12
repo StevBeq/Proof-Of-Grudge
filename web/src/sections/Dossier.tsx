@@ -11,23 +11,19 @@ export function Dossier({ c, role, onSelect }: { c: Copy; role: Role; onSelect: 
   ];
   return (
     <section id="dossier" className="section dossier-section" aria-labelledby="dossier-title">
-      <header className="section-heading reveal dossier-heading-grid">
-        <div className="dossier-heading-text">
-          <p className="case-kicker">{c.dossier}</p>
-          <span className="chapter-mark mono" aria-hidden="true">01</span>
-          <h2 id="dossier-title">{c.dossierTitle}</h2>
-          <p className="dossier-intro">{c.dossierIntro}</p>
-          <p className="watching-chip" role="status"><strong>{c.watchingAs}:</strong> <span className={`actor-${role}`}>{c[role]}</span> — {c.watchingCockpit}</p>
+      <div className="forensic-stamp forensic-stamp-dossier" aria-hidden="true">
+        <div className="stamp-frame">
+          <span className="stamp-tag mono">DECLASSIFIED FORENSIC ARCHIVE // REF 001</span>
+          <strong className="stamp-title">CONFIDENTIAL</strong>
+          <span className="stamp-sub mono">CASE NO. 001 // SYMMETRIC ESCROW MATRIX</span>
         </div>
-        <div className="dossier-stamp-wrap" aria-hidden="true">
-          <div className="forensic-stamp forensic-stamp-dossier">
-            <div className="stamp-frame">
-              <span className="stamp-tag mono">DECLASSIFIED FORENSIC ARCHIVE // REF 001</span>
-              <strong className="stamp-title">CONFIDENTIAL</strong>
-              <span className="stamp-sub mono">CASE NO. 001 // SYMMETRIC ESCROW MATRIX</span>
-            </div>
-          </div>
-        </div>
+      </div>
+      <header className="section-heading reveal">
+        <p className="case-kicker">{c.dossier}</p>
+        <span className="chapter-mark mono" aria-hidden="true">01</span>
+        <h2 id="dossier-title">{c.dossierTitle}</h2>
+        <p className="dossier-intro">{c.dossierIntro}</p>
+        <p className="watching-chip" role="status"><strong>{c.watchingAs}:</strong> <span className={`actor-${role}`}>{c[role]}</span> — {c.watchingCockpit}</p>
       </header>
       <div className="dossier-grid">
         {cards.map((card, index) => {

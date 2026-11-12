@@ -470,32 +470,6 @@ export default function App() {
         <div className="forensic-zone-backdrop" aria-hidden="true">
           <div className="forensic-microgrid-pattern" />
 
-          {/* Stempel Berkas Pudar: TRI-SEAL SPEC Circular Stamp */}
-          <div className="forensic-stamp forensic-stamp-mechanism">
-            <div className="stamp-frame-circle">
-              <svg viewBox="0 0 160 160" className="stamp-circle-svg" aria-hidden="true">
-                <circle cx="80" cy="80" r="74" fill="none" stroke="currentColor" strokeWidth="2.2" strokeDasharray="5 3" />
-                <circle cx="80" cy="80" r="66" fill="none" stroke="currentColor" strokeWidth="1" />
-                <circle cx="80" cy="80" r="52" fill="none" stroke="currentColor" strokeWidth="1" strokeDasharray="2 2" />
-                <path id="circle-path-mech" d="M 80,80 m -45,0 a 45,45 0 1,1 90,0 a 45,45 0 1,1 -90,0" fill="none" />
-                <text fontSize="7" fontFamily="'IBM Plex Mono', monospace" fontWeight="600" letterSpacing="0.14em" fill="currentColor">
-                  <textPath href="#circle-path-mech" startOffset="0%">
-                    PROOF-OF-GRUDGE · SPEC DOMAIN 0 · 
-                  </textPath>
-                </text>
-                <text x="80" y="73" textAnchor="middle" fontSize="12" fontFamily="'Big Shoulders Display', sans-serif" fontWeight="900" letterSpacing="0.08em" fill="currentColor">
-                  TRI-SEAL
-                </text>
-                <text x="80" y="88" textAnchor="middle" fontSize="7.5" fontFamily="'IBM Plex Mono', monospace" fontWeight="700" letterSpacing="0.12em" fill="currentColor">
-                  APERTURE 01
-                </text>
-                <text x="80" y="100" textAnchor="middle" fontSize="6" fontFamily="'IBM Plex Mono', monospace" fill="currentColor">
-                  SECP256K1 / EIP-1559
-                </text>
-              </svg>
-            </div>
-          </div>
-
           {/* Forensic Edge Measuring Scale Rulers */}
           <div className="forensic-edge-ruler forensic-ruler-left" />
           <div className="forensic-edge-ruler forensic-ruler-right" />

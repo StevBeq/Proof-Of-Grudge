@@ -622,23 +622,6 @@ small { font-size: .75rem; }
   user-select: none;
 }
 
-.forensic-stamp-mechanism {
-  bottom: clamp(150px, 18vh, 230px);
-  left: clamp(24px, 6vw, 110px);
-  transform: rotate(11deg);
-  opacity: 0.8;
-}
-.stamp-frame-circle {
-  width: clamp(170px, 18vw, 220px);
-  height: clamp(170px, 18vw, 220px);
-  color: rgba(22, 19, 13, 0.14);
-}
-.stamp-circle-svg {
-  width: 100%;
-  height: 100%;
-  display: block;
-}
-
 /* Forensic Edge Scale Rulers */
 .forensic-edge-ruler {
   position: absolute;
@@ -668,44 +651,32 @@ small { font-size: .75rem; }
   justify-content: center;
   padding-block: clamp(3rem, 6vh, 5rem);
 }
-.dossier-heading-grid {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 2rem;
+.dossier-section .section-heading {
   margin-bottom: 2rem;
-  width: 100%;
+  max-width: 660px;
 }
-.dossier-heading-text {
-  flex: 1;
-  max-width: 680px;
-}
-.dossier-heading-text .chapter-mark {
+.dossier-section .chapter-mark {
   font-size: clamp(2rem, 3.5vw, 2.8rem);
   margin-bottom: .35rem;
 }
-.dossier-heading-text h2 {
+.dossier-section h2 {
   margin-bottom: .5rem;
 }
-.dossier-heading-text .watching-chip {
+.dossier-section .watching-chip {
   margin-top: .85rem;
   padding: .5rem .9rem;
   font-size: .875rem;
 }
 
-.dossier-stamp-wrap {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  padding-top: .5rem;
-}
 .forensic-stamp-dossier {
-  position: static;
-  transform: rotate(-3.5deg);
-  opacity: 0.88;
+  position: absolute;
+  top: clamp(2rem, 5vh, 4rem);
+  right: clamp(0px, 1.5vw, 24px);
+  transform: rotate(-15deg);
+  opacity: 0.9;
   pointer-events: none;
   user-select: none;
+  z-index: 2;
 }
 .forensic-stamp-dossier .stamp-frame {
   display: flex;
@@ -870,28 +841,16 @@ small { font-size: .75rem; }
 .mechanism-steps { list-style: none; margin: 0; padding: 0; }
 .mechanism-step { margin-top: 1rem; }
 .mechanism-step-toggle {
-  width: 100%; text-align: left; display: flex; gap: 1rem; align-items: flex-start;
-  background: #FFF8E8; box-shadow: 3px 3px 0 var(--ink); min-height: 0; padding: 1.25rem;
+  width: 100%; text-align: left; display: flex; gap: 1.25rem; align-items: flex-start;
+  background: #FFF8E8; box-shadow: 3px 3px 0 var(--ink); min-height: 0; padding: 1.25rem 1.4rem;
 }
 .mechanism-step-toggle:hover { background: var(--surface); }
 .mechanism-step.is-active .mechanism-step-toggle { background: var(--ink); color: var(--paper); }
 .mechanism-step.is-active .mechanism-step-body { color: var(--paper); }
-.mechanism-step-head {
-  display: flex;
-  align-items: baseline;
-  gap: .65rem;
-}
-.mechanism-step-code {
-  font-size: .6875rem;
-  letter-spacing: .12em;
-  color: var(--muted);
-}
-.mechanism-step.is-active .mechanism-step-code {
-  color: rgba(255, 248, 232, 0.7);
-}
-.mechanism-step-num { font-size: 1.75rem; line-height: 1; }
-.mechanism-step-title { display: block; font-family: 'Big Shoulders Display', sans-serif; font-weight: 800; font-size: 1.35rem; text-transform: uppercase; }
-.mechanism-step-body { display: block; margin-top: .5rem; color: var(--ink-soft); font-weight: 400; }
+.mechanism-step-num { font-size: 2rem; line-height: 1; font-weight: 700; flex-shrink: 0; }
+.mechanism-step-content { flex: 1; min-width: 0; }
+.mechanism-step-title { display: block; font-family: 'Big Shoulders Display', sans-serif; font-weight: 800; font-size: 1.4rem; text-transform: uppercase; line-height: 1.15; }
+.mechanism-step-body { display: block; margin-top: .4rem; color: var(--ink-soft); font-weight: 400; font-size: .9375rem; line-height: 1.45; }
 .mechanism-step h3 { font-size: 1.125rem; margin-bottom: .7rem; }
 .mechanism-step p { font-size: 1.0625rem; color: var(--muted); }
 
@@ -1323,8 +1282,7 @@ small { font-size: .75rem; }
   .balances dd { font-size: 1.125rem; }
 }
 @media (max-width: 900px) {
-  .dossier-heading-grid { flex-direction: column; gap: 1.25rem; }
-  .dossier-stamp-wrap { justify-content: flex-start; }
+  .forensic-stamp-dossier { position: static; margin-bottom: 1.25rem; align-self: flex-start; transform: rotate(-5deg); }
   .dossier-grid { grid-template-columns: 1fr; }
   .rounds-grid { grid-template-columns: 1fr; }
   .bond-lab-card { grid-template-columns: 1fr; gap: 2rem; }

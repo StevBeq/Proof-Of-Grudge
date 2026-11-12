@@ -4,9 +4,9 @@ export type MechanismStep = 0 | 1 | 2;
 
 export function Mechanism({ c, step, onSelect }: { c: Copy; step: MechanismStep | null; onSelect: (next: MechanismStep | null) => void }) {
   const steps = [
-    { title: c.step1Title, actor: 'heir' as const, body: c.step1, code: 'OP-01 // CLAIM' },
-    { title: c.step2Title, actor: 'rival' as const, body: c.step2, code: 'OP-02 // DISPUTE' },
-    { title: c.step3Title, actor: 'owner' as const, body: c.step3, code: 'OP-03 // VERDICT' },
+    { title: c.step1Title, actor: 'heir' as const, body: c.step1 },
+    { title: c.step2Title, actor: 'rival' as const, body: c.step2 },
+    { title: c.step3Title, actor: 'owner' as const, body: c.step3 },
   ];
   const active = step === null ? null : steps[step];
   return (
@@ -31,11 +31,8 @@ export function Mechanism({ c, step, onSelect }: { c: Copy; step: MechanismStep 
             return (
               <li key={s.title} className={`mechanism-step reveal${isActive ? ' is-active' : ''}`}>
                 <button type="button" className="mechanism-step-toggle" aria-pressed={isActive} onClick={() => onSelect(isActive ? null : (index as MechanismStep))}>
-                  <div className="mechanism-step-head">
-                    <span className={`mechanism-step-num actor-${s.actor} mono`} aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
-                    <span className="mechanism-step-code mono">{s.code}</span>
-                  </div>
-                  <span>
+                  <span className={`mechanism-step-num actor-${s.actor} mono`} aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+                  <span className="mechanism-step-content">
                     <span className={`mechanism-step-title actor-${s.actor}`}>{s.title}</span>
                     <span className="mechanism-step-body">{s.body}</span>
                   </span>
