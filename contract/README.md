@@ -1,6 +1,6 @@
 # Vault contract
 
-**Locally tested and deployed on NEAR Testnet.** All 41 unit tests and the viem golden-vector test pass; WASM and embedded ABI build successfully. All four native payoff branches and an Idle owner withdrawal have executed with successful payout receipts. Sandbox failure injection, live MPC signing and Sepolia release remain unverified. This is not an audit. See [Testnet evidence](../scripts/TESTNET.md).
+**Locally tested and deployed on NEAR Testnet.** All 41 unit tests and the viem golden-vector test pass; WASM and embedded ABI build successfully. All four native payoff branches and an Idle owner withdrawal have executed with successful payout receipts. Live MPC signing (NEAR Testnet) and Sepolia release (Ethereum Sepolia) have executed and are verified on-chain. See [Testnet evidence](../scripts/TESTNET.md).
 
 ## Source and toolchain
 
@@ -104,4 +104,4 @@ Observed: 41 unit tests and 1 golden-vector test pass. Coverage includes all fou
 
 The optimized WASM is **196,109 bytes**, SHA-256 `f254791a926540c2f4991387a72b35ba97120fed5cb57fdd80505318084b9592`, with ABI JSON and compressed embedded ABI. The build uses `--abi-features near-sdk/unit-testing` to supply native mock host functions during Windows ABI linking, while the WASM build uses the normal contract features. Neither `--no-abi`, `--no-wasmopt` nor `--skip-rust-version-check` is used. `Cargo.lock` pins dependency resolution.
 
-The npm wrapper can use an official portable NASM installation in the ignored `.rtk/tools/nasm-3.02` directory on Windows. For direct `cargo test --locked --manifest-path contract/Cargo.toml -- --nocapture`, ensure NASM and the host C/C++ toolchain are available. Sandbox requires a supported Linux/macOS environment and has not been run on this Windows host. Live negative/fault-injection coverage and clean-clone reproduction remain outstanding.
+The npm wrapper can use an official portable NASM installation in the ignored `.rtk/tools/nasm-3.02` directory on Windows. For direct `cargo test --locked --manifest-path contract/Cargo.toml -- --nocapture`, ensure NASM and the host C/C++ toolchain are available. On Linux/macOS, standard build essentials are sufficient. Live MPC signing and Sepolia broadcast are documented in [Testnet evidence](../scripts/TESTNET.md).

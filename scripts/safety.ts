@@ -78,7 +78,7 @@ const valued = new Set(['scenario', 'vault', 'near-rpc', 'sepolia-rpc', 'public-
 const commands = new Set<Command>(['demo', 'inspect', 'derive', 'preview-eth', 'request-eth', 'relay-eth', 'release-eth', 'deposit', 'withdraw-payout']);
 
 export function parseOptions(argv: string[], defaultCommand: Command = 'demo'): Options {
-  const args = [...argv];
+  const args = argv.filter(arg => arg !== '--');
   let command = defaultCommand;
   if (args[0] && !args[0].startsWith('--')) {
     ensure(commands.has(args[0] as Command), 'Unknown command. Use --help.');

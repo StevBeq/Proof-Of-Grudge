@@ -1,0 +1,11 @@
+# Force LF line endings across all platforms for reproducibility
+* text=auto eol=lf
+*.json text eol=lf
+*.rs text eol=lf
+*.ts text eol=lf
+*.js text eol=lf
+*.mjs text eol=lf
+*.md text eol=lf
+*.toml text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf

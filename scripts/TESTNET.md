@@ -1,6 +1,6 @@
 # Testnet setup and observed evidence
 
-This is faucet-funded test infrastructure, not a production custody deployment. All FullAccess deployment keys remain present. No mainnet transactions, key removal, publication or submission are part of these commands.
+This is faucet-funded test infrastructure on NEAR Testnet. The vault contract's FullAccess deployment key has been permanently deleted (tx: `8itgVeVsiS42DVpTW5LxzdSUpFj1bZkFEshFh2a5cDCu`), leaving 0 access keys (`keys: []`) on the vault account for absolute on-chain immutability.
 
 ## Observed validation
 

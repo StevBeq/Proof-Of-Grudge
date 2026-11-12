@@ -84,7 +84,7 @@ if (checkOnly) {
   } catch (error) {
     throw new Error('Missing generated fixture. From contract/: npm install && npm run vectors', { cause: error });
   }
-  assert.equal(existing, expected, 'Fixture is stale or modified. Run npm run vectors and commit the result');
+  assert.equal(existing.replace(/\r\n/g, '\n'), expected, 'Fixture is stale or modified. Run npm run vectors and commit the result');
   console.log('eip1559.generated.json matches pinned viem serialization');
 } else {
   await writeFile(outputUrl, expected, 'utf8');

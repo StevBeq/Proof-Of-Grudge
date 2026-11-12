@@ -11,7 +11,7 @@
 <p align="center">
   <a href="https://proof-of-grudge.vercel.app"><img src="https://img.shields.io/badge/Live%20App-proof--of--grudge.vercel.app-00EC97?style=flat-square&logo=vercel" alt="Live App" /></a>
   <a href="https://nearhackathon.com"><img src="https://img.shields.io/badge/NEAR%20Hackathon-Track%2013%3A%20Open%20Innovation-orange?style=flat-square" alt="Track" /></a>
-  <a href="https://github.com/StevBeq/Proof-Of-Grudge/actions"><img src="https://img.shields.io/badge/CI-passing-2ea44f?style=flat-square" alt="CI" /></a>
+  <a href="https://github.com/StevBeq/Proof-Of-Grudge/actions/workflows/ci.yml"><img src="https://github.com/StevBeq/Proof-Of-Grudge/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
   <a href="https://github.com/StevBeq/Proof-Of-Grudge"><img src="https://img.shields.io/badge/contract%20tests-42%20passed-2ea44f?style=flat-square" alt="Contract Tests" /></a>
   <a href="https://github.com/StevBeq/Proof-Of-Grudge"><img src="https://img.shields.io/badge/web%20tests-33%20passed-2ea44f?style=flat-square" alt="Web Tests" /></a>
   <a href="https://testnet.nearblocks.io/address/pog-mw835qrr-1c82b2-vault.testnet"><img src="https://img.shields.io/badge/NEAR-testnet-00EC97?style=flat-square&logo=near" alt="NEAR Testnet" /></a>
@@ -74,7 +74,7 @@
 
 ## Machine-Reproducible Verification ("Do → See")
 
-Follow these steps to clone, run test suites, and simulate the switch locally:
+Follow these steps to clone, run test suites, and simulate the switch locally (Prerequisites: Node >= 22.15, Rust >= 1.95; on Windows native, NASM is required for crypto compilation):
 
 | Do | See |
 | :--- | :--- |
