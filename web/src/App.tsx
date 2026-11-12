@@ -470,15 +470,6 @@ export default function App() {
         <div className="forensic-zone-backdrop" aria-hidden="true">
           <div className="forensic-microgrid-pattern" />
 
-          {/* Stempel Berkas Pudar: CONFIDENTIAL // CASE NO. 001 */}
-          <div className="forensic-stamp forensic-stamp-dossier">
-            <div className="stamp-frame">
-              <span className="stamp-tag mono">DECLASSIFIED FORENSIC ARCHIVE // REF 001</span>
-              <strong className="stamp-title">CONFIDENTIAL // CASE NO. 001</strong>
-              <span className="stamp-sub mono">THREE ADVERSARIAL ACTORS // SYMMETRIC ESCROW MATRIX</span>
-            </div>
-          </div>
-
           {/* Stempel Berkas Pudar: TRI-SEAL SPEC Circular Stamp */}
           <div className="forensic-stamp forensic-stamp-mechanism">
             <div className="stamp-frame-circle">
