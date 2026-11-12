@@ -11,33 +11,13 @@ export function Dossier({ c, role, onSelect }: { c: Copy; role: Role; onSelect: 
   ];
   return (
     <section id="dossier" className="section dossier-section" aria-labelledby="dossier-title">
-      <div className="dossier-header-row reveal">
-        <header className="section-heading">
-          <p className="case-kicker">{c.dossier}</p>
-          <span className="chapter-mark mono" aria-hidden="true">01</span>
-          <h2 id="dossier-title">{c.dossierTitle}</h2>
-          <p className="dossier-intro">{c.dossierIntro}</p>
-          <p className="watching-chip" role="status"><strong>{c.watchingAs}:</strong> <span className={`actor-${role}`}>{c[role]}</span> — {c.watchingCockpit}</p>
-        </header>
-
-        {/* Repositioned Evidence File Slip & Stempel Berkas (Per user sketch in Image 6) */}
-        <aside className="dossier-evidence-slip" aria-label="Forensic Case Document Badge">
-          <div className="slip-paper">
-            <div className="slip-header-line mono" aria-hidden="true">
-              <span>REF: EVIDENCE-001</span>
-              <span>FORENSIC ARCHIVE</span>
-            </div>
-            <div className="stamp-frame" aria-hidden="true">
-              <span className="stamp-tag mono">DECLASSIFIED FORENSIC ARCHIVE // REF 001</span>
-              <strong className="stamp-title">CONFIDENTIAL</strong>
-              <span className="stamp-sub mono">CASE NO. 001 // SYMMETRIC ESCROW MATRIX</span>
-            </div>
-            <div className="slip-footer-line mono" aria-hidden="true">
-              <span>SEC // SEPARATION: THREE ACTORS</span>
-            </div>
-          </div>
-        </aside>
-      </div>
+      <header className="section-heading reveal">
+        <p className="case-kicker">{c.dossier}</p>
+        <span className="chapter-mark mono" aria-hidden="true">01</span>
+        <h2 id="dossier-title">{c.dossierTitle}</h2>
+        <p className="dossier-intro">{c.dossierIntro}</p>
+        <p className="watching-chip" role="status"><strong>{c.watchingAs}:</strong> <span className={`actor-${role}`}>{c[role]}</span> — {c.watchingCockpit}</p>
+      </header>
 
       <div className="dossier-grid">
         {cards.map((card, index) => {

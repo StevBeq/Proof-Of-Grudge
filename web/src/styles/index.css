@@ -335,16 +335,19 @@ small { font-size: .75rem; }
   white-space: nowrap;
 }
 .portal-aperture-stack {
-  position: relative;
+  position: absolute;
+  inset: 0;
+  margin: auto;
   z-index: 4;
-  height: 100%;
-  max-height: 88dvh;
+  height: min(88dvh, 720px);
+  width: min(92vw, 680px);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
   text-align: center;
   pointer-events: none;
+  contain: layout size;
 }
 .portal-header-box {
   display: flex;
@@ -625,64 +628,82 @@ small { font-size: .75rem; }
 .scene-emergency { position: fixed; right: 5%; top: 20%; width: 35vw; z-index: 0; pointer-events: none; }
 
 @media (min-width: 901px) {
-  /* Hide redundant case file kicker & tech tags on desktop so Hero fits 100% desktop viewport without scrolling (Per User Request 3) */
-  .hero .case-kicker,
-  .hero-spec-tag,
+  /* Restored case-kicker and tech spec tags with compact desktop layout (Per user request) */
+  .hero .case-kicker {
+    display: inline-block;
+    margin-bottom: .25rem;
+    font-size: .6875rem;
+    letter-spacing: .15em;
+    color: var(--muted);
+  }
+
+  .hero-spec-tag {
+    display: block;
+    position: absolute;
+    top: 6px;
+    right: 20px;
+    font-size: .5625rem;
+    letter-spacing: .12em;
+    color: rgba(22, 19, 13, 0.4);
+  }
+
   .hero-network {
-    display: none !important;
+    display: block;
   }
 
   .hero-copy h1 {
-    font-size: clamp(2.8rem, 4.4vw, 4.6rem);
-    line-height: .93;
+    font-size: clamp(2.6rem, 4.2vw, 4.4rem);
+    line-height: .92;
+    margin-top: .15rem;
     margin-bottom: 0;
   }
 
   .hero-intro {
-    font-size: 1rem;
-    line-height: 1.45;
+    font-size: .95rem;
+    line-height: 1.42;
     max-width: 44ch;
-    margin-top: .85rem;
+    margin-top: .65rem;
   }
 
   .evidence {
-    margin: 1.15rem 0 0;
+    margin: .85rem 0 0;
   }
 
   .evidence > div {
-    padding: .55rem .5rem .55rem 0;
+    padding: .4rem .5rem .4rem 0;
   }
 
   .evidence-number {
-    font-size: clamp(1.75rem, 2.7vw, 2.45rem);
-    margin: .25rem 0 0;
+    font-size: clamp(1.65rem, 2.5vw, 2.3rem);
+    margin: .2rem 0 0;
   }
 
   .hero-actions {
-    margin-top: 1.15rem;
-    gap: 1.1rem;
+    margin-top: .9rem;
+    gap: 1rem;
   }
 
   .hero-footer-meta {
-    margin-top: .85rem;
+    margin-top: .75rem;
+    gap: .35rem;
   }
 
   .hero-object .scene-anchor {
-    height: clamp(240px, 25vw, 320px);
+    height: clamp(200px, 21vw, 260px);
   }
 
   .hero-scene-controls {
-    margin-top: .35rem;
-    min-height: 36px;
+    margin-top: .3rem;
+    min-height: 34px;
   }
 
   .hero-legend {
-    margin-top: .35rem;
+    margin-top: .25rem;
     font-size: .8125rem;
   }
 
   .hero-object .caption {
-    margin-top: .35rem;
+    margin-top: .25rem;
     font-size: .75rem;
   }
 }
@@ -777,98 +798,9 @@ small { font-size: .75rem; }
   justify-content: center;
   padding-block: clamp(3rem, 6vh, 5rem);
 }
-.dossier-header-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  gap: 2rem;
+.dossier-section .section-heading {
   margin-bottom: 2rem;
-  position: relative;
-}
-.dossier-header-row .section-heading {
-  margin-bottom: 0;
   max-width: 640px;
-  flex: 1;
-}
-.dossier-section .chapter-mark {
-  font-size: clamp(2rem, 3.5vw, 2.8rem);
-  margin-bottom: .35rem;
-}
-.dossier-section h2 {
-  margin-bottom: .5rem;
-}
-.dossier-section .watching-chip {
-  margin-top: .85rem;
-  padding: .5rem .9rem;
-  font-size: .875rem;
-}
-
-/* Repositioned Evidence Document Slip with Rubber Stamp (Per user Image 6 annotation) */
-.dossier-evidence-slip {
-  flex: none;
-  width: clamp(260px, 32vw, 360px);
-  user-select: none;
-  transform: rotate(-3.5deg);
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
-  margin-bottom: 0.25rem;
-}
-.dossier-evidence-slip:hover {
-  transform: rotate(0deg) translateY(-2px);
-}
-.dossier-evidence-slip .slip-paper {
-  background: #FFFDF5;
-  border: 1.5px solid var(--line);
-  box-shadow: 3px 4px 0 var(--line);
-  padding: .7rem 1.1rem;
-  display: flex;
-  flex-direction: column;
-  gap: .4rem;
-  position: relative;
-}
-.dossier-evidence-slip .slip-header-line,
-.dossier-evidence-slip .slip-footer-line {
-  display: flex;
-  justify-content: space-between;
-  font-size: .5625rem;
-  letter-spacing: .14em;
-  color: var(--muted);
-  text-transform: uppercase;
-}
-.dossier-evidence-slip .stamp-frame {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  padding: .55rem 1rem;
-  border: 2px dashed rgba(215, 38, 30, 0.55);
-  outline: 1.5px solid rgba(215, 38, 30, 0.28);
-  outline-offset: -3px;
-  border-radius: 2px;
-  background: rgba(215, 38, 30, 0.04);
-  box-shadow: inset 0 0 10px rgba(215, 38, 30, 0.035);
-}
-.dossier-evidence-slip .stamp-tag {
-  font-size: .5625rem;
-  letter-spacing: .16em;
-  color: rgba(215, 38, 30, 0.65);
-  text-transform: uppercase;
-  font-weight: 600;
-}
-.dossier-evidence-slip .stamp-title {
-  font-family: 'Big Shoulders Display', sans-serif;
-  font-weight: 900;
-  font-size: 2.1rem;
-  letter-spacing: .12em;
-  line-height: 1;
-  margin: .2rem 0 .15rem;
-  color: rgba(215, 38, 30, 0.8);
-  text-transform: uppercase;
-}
-.dossier-evidence-slip .stamp-sub {
-  font-size: .5625rem;
-  letter-spacing: .12em;
-  color: rgba(215, 38, 30, 0.55);
-  text-transform: uppercase;
 }
 
 .dossier-grid {
@@ -1558,8 +1490,6 @@ small { font-size: .75rem; }
   .balances dd { font-size: 1.125rem; }
 }
 @media (max-width: 900px) {
-  .dossier-header-row { flex-direction: column; align-items: flex-start; gap: 1.25rem; }
-  .dossier-evidence-slip { width: 100%; max-width: 380px; transform: rotate(-1.5deg); margin-bottom: 1rem; }
   .dossier-grid { grid-template-columns: 1fr; }
   .rounds-grid { grid-template-columns: 1fr; }
   .bond-lab-card { grid-template-columns: 1fr; gap: 2rem; }

@@ -180,7 +180,17 @@ export function nudgeSceneRotation(deltaYaw: number, deltaPitch = 0): void {
 
 const DEFAULT_ANCHOR_IDS = ['portal-scene', 'hero-scene', 'mechanism-scene', 'divider-scene', 'cockpit-scene'] as const;
 
-export function scenePlacement(): {
+let cachedPlacement: {
+  x: number;
+  y: number;
+  size: number;
+  distance: number;
+  visible: boolean;
+  anchorId: string | null;
+} | null = null;
+let lastPlacementTime = 0;
+
+function computeScenePlacement(): {
   x: number;
   y: number;
   size: number;
@@ -240,6 +250,16 @@ export function scenePlacement(): {
   return closest
     ? { ...closest, visible: true }
     : { x: width * 0.75, y: height * 0.5, size: 0, distance: Infinity, visible: false, anchorId: null };
+}
+
+export function scenePlacement() {
+  const now = performance.now();
+  if (cachedPlacement && now - lastPlacementTime < 16) {
+    return cachedPlacement;
+  }
+  lastPlacementTime = now;
+  cachedPlacement = computeScenePlacement();
+  return cachedPlacement;
 }
 
 export function isPointInsideSceneAnchor(clientX: number, clientY: number): boolean {

@@ -64,57 +64,79 @@ export function useNearWallet() {
     }
   }, [accountId]);
 
-  // Check for existing connection on mount
+  // Check for existing connection on idle to avoid blocking critical page render
   useEffect(() => {
-    const connector = getConnector();
-    if (!connector) return;
-
     let mounted = true;
+    let cleanupEvents: (() => void) | null = null;
 
-    const restoreSession = async () => {
-      try {
-        const connected = await connector.getConnectedWallet();
-        if (connected?.wallet && connected.accounts?.length) {
-          const acc = connected.accounts[0].accountId;
-          if (mounted) {
-            walletRef.current = connected.wallet;
-            setAccountId(acc);
-            setWalletName(connected.wallet.manifest.name || 'NEAR Wallet');
-            void refreshBalance(acc);
+    const scheduleInit = () => {
+      if (!mounted) return;
+      const connector = getConnector();
+      if (!connector) return;
+
+      const restoreSession = async () => {
+        try {
+          const connected = await connector.getConnectedWallet();
+          if (connected?.wallet && connected.accounts?.length) {
+            const acc = connected.accounts[0].accountId;
+            if (mounted) {
+              walletRef.current = connected.wallet;
+              setAccountId(acc);
+              setWalletName(connected.wallet.manifest.name || 'NEAR Wallet');
+              void refreshBalance(acc);
+            }
           }
+        } catch {
+          // No connected wallet initially, which is expected
         }
-      } catch {
-        // No connected wallet initially, which is expected
-      }
+      };
+
+      void restoreSession();
+
+      const handleSignIn = (payload: { wallet: NearWalletBase; accounts: { accountId: string }[] }) => {
+        if (!mounted) return;
+        walletRef.current = payload.wallet;
+        const acc = payload.accounts[0]?.accountId ?? null;
+        setAccountId(acc);
+        setWalletName(payload.wallet.manifest.name || 'NEAR Wallet');
+        if (acc) void refreshBalance(acc);
+      };
+
+      const handleSignOut = () => {
+        if (!mounted) return;
+        walletRef.current = null;
+        setAccountId(null);
+        setWalletName(null);
+        setBalanceYocto(null);
+      };
+
+      connector.on('wallet:signIn', handleSignIn);
+      connector.on('wallet:signOut', handleSignOut);
+
+      cleanupEvents = () => {
+        connector.off('wallet:signIn', handleSignIn);
+        connector.off('wallet:signOut', handleSignOut);
+      };
     };
 
-    void restoreSession();
-
-    const handleSignIn = (payload: { wallet: NearWalletBase; accounts: { accountId: string }[] }) => {
-      if (!mounted) return;
-      walletRef.current = payload.wallet;
-      const acc = payload.accounts[0]?.accountId ?? null;
-      setAccountId(acc);
-      setWalletName(payload.wallet.manifest.name || 'NEAR Wallet');
-      if (acc) void refreshBalance(acc);
-    };
-
-    const handleSignOut = () => {
-      if (!mounted) return;
-      walletRef.current = null;
-      setAccountId(null);
-      setWalletName(null);
-      setBalanceYocto(null);
-    };
-
-    connector.on('wallet:signIn', handleSignIn);
-    connector.on('wallet:signOut', handleSignOut);
-
-    return () => {
-      mounted = false;
-      connector.off('wallet:signIn', handleSignIn);
-      connector.off('wallet:signOut', handleSignOut);
-    };
+    const win = typeof window !== 'undefined' ? window : null;
+    if (win && 'requestIdleCallback' in win) {
+      const id = (win as unknown as { requestIdleCallback: (cb: () => void, opts: { timeout: number }) => number }).requestIdleCallback(scheduleInit, { timeout: 1800 });
+      return () => {
+        mounted = false;
+        if (cleanupEvents) cleanupEvents();
+        if ('cancelIdleCallback' in win) {
+          (win as unknown as { cancelIdleCallback: (id: number) => void }).cancelIdleCallback(id);
+        }
+      };
+    } else {
+      const timer = setTimeout(scheduleInit, 1000);
+      return () => {
+        mounted = false;
+        if (cleanupEvents) cleanupEvents();
+        clearTimeout(timer);
+      };
+    }
   }, [refreshBalance]);
 
   const connectWallet = useCallback(async () => {
