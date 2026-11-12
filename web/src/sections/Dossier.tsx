@@ -19,10 +19,16 @@ export function Dossier({ c, role, onSelect }: { c: Copy; role: Role; onSelect: 
         <p className="watching-chip" role="status"><strong>{c.watchingAs}:</strong> <span className={`actor-${role}`}>{c[role]}</span> — {c.watchingCockpit}</p>
       </header>
       <div className="dossier-grid">
-        {cards.map(card => {
+        {cards.map((card, index) => {
           const active = role === card.key;
           return (
             <article key={card.key} className={`dossier-card dossier-${card.key} reveal${active ? ' is-active' : ''}`} aria-current={active}>
+              <span className="dossier-card-crosshair tl" aria-hidden="true">+</span>
+              <span className="dossier-card-crosshair br" aria-hidden="true">+</span>
+              <div className="dossier-card-meta" aria-hidden="true">
+                <span className="dossier-card-tag mono">DOC-0{index + 1} // {card.key.toUpperCase()}</span>
+                <span className="dossier-card-status mono">{active ? '● ACTIVE FOCUS' : '○ STANDBY'}</span>
+              </div>
               <span className="dossier-seal" aria-hidden="true">{card.seal}</span>
               <h3>{c[card.key]}</h3>
               <p className="dossier-role">{card.title}</p>

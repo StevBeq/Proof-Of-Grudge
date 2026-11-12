@@ -4,19 +4,25 @@ An adversarial inheritance vault on **NEAR Testnet**, with destination-locked ET
 
 Built for **NEAR Hackathon 2026 · Open Innovation (`open`)**.
 
-## Overview
+## What this is
 
-An inactivity-based inheritance vault faces two risks: releasing funds while its owner is temporarily unavailable, and allowing a guardian to block a legitimate claim indefinitely.
+A four-part plain-language summary:
 
-Proof-of-Grudge introduces a bonded rival. After the owner misses a heartbeat, the heir must stake a bond to claim. A rival can stake an equal bond to extend the deadline once. Only the owner's timely check-in cancels the claim. If the owner never returns, the rival's bond goes to the heir instead of buying an indefinite veto.
+**The problem.** An inheritance vault that releases funds after owner inactivity cannot tell *"the owner is on holiday"* from *"the owner has died"*. A naive guardian can then block a legitimate heir forever, or release the estate while the owner still lives.
 
-The repository contains:
+**The product.** A NEAR smart contract that holds the vault and enforces a contested claim. After the owner misses their heartbeat, a **heir** stakes a bond to claim. A **rival** may stake an equal bond to force a deadline extension — once. Only the owner's timely check-in cancels a claim, and a rival who loses pays the heir double. Settlement is a pull-payment ledger on NEAR; the vault never trusts raw account balances.
 
-- A Rust smart contract for deadlines, authorization, native NEAR accounting and settlement.
-- A CLI for offline scenarios and explicitly authorized Testnet/Sepolia operations.
-- An English/Indonesian web simulator with an optional read-only contract inspector.
+**The cross-chain step.** After inheritance is finalized, the contract itself builds an EIP-1559 transaction to the pre-registered heir ETH address and requests a signature from **NEAR Chain Signatures (MPC)**. The CLI verifies that signature and relays the transaction to Ethereum Sepolia. No application-held EVM private key exists at any point.
 
-**Status:** development prototype, not audited. Local tests pass (41 Rust unit tests, 1 viem golden-vector test, 33 CLI/setup tests and 32 web tests), and the WASM builds with embedded ABI. All four native NEAR payoff branches have executed on Testnet with successful payout receipts. Cross-chain ETH release on Ethereum Sepolia has been successfully signed via NEAR Chain Signatures MPC and broadcast. See [Testnet evidence and setup](scripts/TESTNET.md).
+**What is in the repository.**
+
+- `contract/` — the Rust vault contract (deadlines, authorization, accounting, MPC request) on NEAR Testnet.
+- `scripts/` — an offline CLI: reproducible scenarios for all four outcomes plus gated, explicitly-authorized Testnet/Sepolia operations.
+- `web/` — an English/Indonesian web simulator with an optional read-only inspector of the live contract.
+
+The fastest non-browser check is the four `npm run demo -- --dry-run` commands under [Run locally](#run-locally); the fastest visual check is the web simulator via `npm run dev`.
+
+**Status:** development prototype, not audited. Local tests pass (41 Rust unit tests, 1 viem golden-vector test, 33 CLI/setup tests and 33 web tests), and the WASM builds with embedded ABI. All four native NEAR payoff branches have executed on Testnet with successful payout receipts. Cross-chain ETH release on Ethereum Sepolia has been successfully signed via NEAR Chain Signatures MPC and broadcast. See [Testnet evidence and setup](scripts/TESTNET.md).
 
 ### Live NEAR Testnet Evidence
 

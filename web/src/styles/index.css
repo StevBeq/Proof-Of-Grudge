@@ -590,6 +590,220 @@ small { font-size: .75rem; }
 .pose-Finalized .core-right { transform: translateX(26px); }
 .scene-emergency { position: fixed; right: 5%; top: 20%; width: 35vw; z-index: 0; pointer-events: none; }
 
+/* ---------- Section 02: Dossier & Mechanism Forensic Case File Zone ---------- */
+.case-dossier-zone {
+  position: relative;
+  width: 100%;
+  border-top: 2px solid var(--line);
+  border-bottom: 2px solid var(--line);
+}
+
+.forensic-zone-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  user-select: none;
+}
+
+.forensic-microgrid-pattern {
+  position: absolute;
+  inset: 0;
+  background-color: var(--paper);
+  background-image:
+    url("data:image/svg+xml,%3Csvg width='32' height='32' viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M16 13v6M13 16h6' stroke='%2316130D' stroke-width='0.75' stroke-opacity='0.11' stroke-linecap='square'/%3E%3C/svg%3E");
+  background-size: 32px 32px;
+}
+
+/* Zone Top Forensic Bar */
+.forensic-zone-bar {
+  position: relative;
+  z-index: 2;
+  border-bottom: 1.5px solid var(--hairline);
+  background: rgba(22, 19, 13, 0.035);
+  padding: .55rem 1.5rem;
+}
+.forensic-zone-bar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  max-width: 1100px;
+  margin-inline: auto;
+  font-size: .6875rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.forensic-bar-crosshair {
+  color: var(--ink-soft);
+  font-weight: 300;
+}
+
+/* Faded Rubber Stamps (Stempel Berkas Investigasi) */
+.forensic-stamp {
+  position: absolute;
+  pointer-events: none;
+  user-select: none;
+}
+
+.forensic-stamp-dossier {
+  top: 60px;
+  right: clamp(20px, 7vw, 110px);
+  transform: rotate(-6.5deg);
+  opacity: 0.9;
+}
+.forensic-stamp-dossier .stamp-frame {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: .75rem 1.35rem;
+  border: 2.5px solid rgba(215, 38, 30, 0.18);
+  outline: 1.5px dashed rgba(215, 38, 30, 0.14);
+  outline-offset: -5px;
+  border-radius: 4px;
+  background: rgba(255, 248, 232, 0.35);
+  backdrop-filter: blur(1px);
+}
+.forensic-stamp-dossier .stamp-tag {
+  font-size: .625rem;
+  letter-spacing: .16em;
+  color: rgba(215, 38, 30, 0.48);
+  text-transform: uppercase;
+}
+.forensic-stamp-dossier .stamp-title {
+  font-family: 'Big Shoulders Display', sans-serif;
+  font-weight: 900;
+  font-size: clamp(1.6rem, 2.5vw, 2.3rem);
+  letter-spacing: .06em;
+  line-height: 1;
+  margin: .3rem 0 .25rem;
+  color: rgba(215, 38, 30, 0.44);
+  text-transform: uppercase;
+}
+.forensic-stamp-dossier .stamp-sub {
+  font-size: .5625rem;
+  letter-spacing: .12em;
+  color: rgba(215, 38, 30, 0.42);
+  text-transform: uppercase;
+}
+
+.forensic-stamp-mechanism {
+  bottom: 80px;
+  left: clamp(24px, 8vw, 130px);
+  transform: rotate(11deg);
+  opacity: 0.8;
+}
+.stamp-frame-circle {
+  width: clamp(170px, 18vw, 220px);
+  height: clamp(170px, 18vw, 220px);
+  color: rgba(22, 19, 13, 0.14);
+}
+.stamp-circle-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Forensic Edge Scale Rulers */
+.forensic-edge-ruler {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 14px;
+  opacity: 0.32;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    var(--line) 0 1px,
+    transparent 1px 16px,
+    var(--line) 16px 17px,
+    transparent 17px 32px
+  );
+}
+.forensic-ruler-left { left: 4px; }
+.forensic-ruler-right { right: 4px; }
+
+/* Dossier Card Polish */
+.dossier-card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: .6rem;
+  padding-bottom: .4rem;
+  border-bottom: 1px dashed var(--hairline);
+}
+.dossier-card-tag {
+  font-size: .6875rem;
+  letter-spacing: .12em;
+  color: var(--muted);
+  font-weight: 600;
+}
+.dossier-card-status {
+  font-size: .625rem;
+  letter-spacing: .08em;
+  color: var(--ink-soft);
+}
+.dossier-card.is-active .dossier-card-status {
+  color: var(--ink);
+  font-weight: 700;
+}
+.dossier-card-crosshair {
+  position: absolute;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: .875rem;
+  font-weight: 300;
+  color: var(--hairline);
+  line-height: 1;
+}
+.dossier-card-crosshair.tl { top: 6px; left: 8px; }
+.dossier-card-crosshair.br { bottom: 6px; right: 8px; }
+
+/* Mechanism Cradle Polish */
+.mechanism-object-cradle {
+  position: absolute;
+  inset: -12px;
+  pointer-events: none;
+  border: 1px dashed var(--hairline);
+  border-radius: var(--radius-panel);
+}
+.cradle-crosshair {
+  position: absolute;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: .9375rem;
+  font-weight: 300;
+  color: var(--hairline);
+  line-height: 1;
+}
+.cradle-crosshair.tl { top: -6px; left: -5px; }
+.cradle-crosshair.tr { top: -6px; right: -5px; }
+.cradle-crosshair.bl { bottom: -6px; left: -5px; }
+.cradle-crosshair.br { bottom: -6px; right: -5px; }
+.cradle-label {
+  position: absolute;
+  top: -10px;
+  right: 18px;
+  background: var(--paper);
+  padding: 0 6px;
+  font-size: .5625rem;
+  letter-spacing: .14em;
+  color: var(--muted);
+}
+.mechanism-step-head {
+  display: flex;
+  align-items: baseline;
+  gap: .65rem;
+}
+.mechanism-step-code {
+  font-size: .6875rem;
+  letter-spacing: .12em;
+  color: var(--muted);
+}
+.mechanism-step.is-active .mechanism-step-code {
+  color: rgba(255, 248, 232, 0.7);
+}
+
 /* ---------- Dossier ---------- */
 .dossier-section { padding-block: 90px; }
 .dossier-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; }

@@ -4,14 +4,21 @@ export type MechanismStep = 0 | 1 | 2;
 
 export function Mechanism({ c, step, onSelect }: { c: Copy; step: MechanismStep | null; onSelect: (next: MechanismStep | null) => void }) {
   const steps = [
-    { title: c.step1Title, actor: 'heir' as const, body: c.step1 },
-    { title: c.step2Title, actor: 'rival' as const, body: c.step2 },
-    { title: c.step3Title, actor: 'owner' as const, body: c.step3 },
+    { title: c.step1Title, actor: 'heir' as const, body: c.step1, code: 'OP-01 // CLAIM' },
+    { title: c.step2Title, actor: 'rival' as const, body: c.step2, code: 'OP-02 // DISPUTE' },
+    { title: c.step3Title, actor: 'owner' as const, body: c.step3, code: 'OP-03 // VERDICT' },
   ];
   const active = step === null ? null : steps[step];
   return (
     <section id="mechanism" className="section mechanism-section" aria-labelledby="mechanism-title">
       <div className="mechanism-object reveal">
+        <div className="mechanism-object-cradle" aria-hidden="true">
+          <span className="cradle-crosshair tl">+</span>
+          <span className="cradle-crosshair tr">+</span>
+          <span className="cradle-crosshair bl">+</span>
+          <span className="cradle-crosshair br">+</span>
+          <span className="cradle-label mono">TARGET COORD // 3D APERTURE SPEC</span>
+        </div>
         <div id="mechanism-scene" className="scene-anchor" role="img" aria-label={c.scene} />
         <p className="caption">{c.scene}</p>
         <p className="mechanism-readout mono" role="status" aria-live="polite">
@@ -31,7 +38,10 @@ export function Mechanism({ c, step, onSelect }: { c: Copy; step: MechanismStep 
             return (
               <li key={s.title} className={`mechanism-step reveal${isActive ? ' is-active' : ''}`}>
                 <button type="button" className="mechanism-step-toggle" aria-pressed={isActive} onClick={() => onSelect(isActive ? null : (index as MechanismStep))}>
-                  <span className={`mechanism-step-num actor-${s.actor} mono`} aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+                  <div className="mechanism-step-head">
+                    <span className={`mechanism-step-num actor-${s.actor} mono`} aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+                    <span className="mechanism-step-code mono">{s.code}</span>
+                  </div>
                   <span>
                     <span className={`mechanism-step-title actor-${s.actor}`}>{s.title}</span>
                     <span className="mechanism-step-body">{s.body}</span>
