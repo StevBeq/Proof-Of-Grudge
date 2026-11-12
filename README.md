@@ -1,19 +1,26 @@
+<div align="center">
+
 # Proof-of-Grudge
 
-![Proof-of-Grudge](docs/assets/banner.webp)
+<img src="docs/assets/banner.webp" alt="Proof-of-Grudge" width="100%" />
 
-> **An adversarial dead-man's switch on NEAR Testnet, with destination-locked ETH releases on Ethereum Sepolia through NEAR Chain Signatures.**
->
-> *Don't trust saints. Arm their rival.*
+### An adversarial dead-man's switch on NEAR Testnet, with destination-locked ETH releases on Ethereum Sepolia through NEAR Chain Signatures.
 
-[![CI](https://img.shields.io/badge/CI-passing-2ea44f?style=flat-square)](https://github.com/StevBeq/Proof-Of-Grudge/actions)
-[![Unit Tests](https://img.shields.io/badge/contract%20tests-42%20passed-2ea44f?style=flat-square)](https://github.com/StevBeq/Proof-Of-Grudge)
-[![Frontend Tests](https://img.shields.io/badge/web%20tests-33%20passed-2ea44f?style=flat-square)](https://github.com/StevBeq/Proof-Of-Grudge)
-[![NEAR Testnet](https://img.shields.io/badge/NEAR-testnet-00EC97?style=flat-square&logo=near)](https://testnet.nearblocks.io/address/pog-mw835qrr-1c82b2-vault.testnet)
-[![Access Keys](https://img.shields.io/badge/access%20keys-0%20(immutable)-success?style=flat-square)](https://testnet.nearblocks.io/address/pog-mw835qrr-1c82b2-vault.testnet)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
+*Don't trust saints. Arm their rival.*
 
-[Try the whole story, about 40 s in the web simulator](#try-the-whole-story-in-40-seconds) · [Watch the 60-second video demo (X / Twitter)](#) · [Live Testnet evidence](#live-near-testnet-evidence) · [Security policy & threat model](SECURITY.md)
+<p align="center">
+  <a href="https://proof-of-grudge.vercel.app"><img src="https://img.shields.io/badge/Live%20App-proof--of--grudge.vercel.app-00EC97?style=flat-square&logo=vercel" alt="Live App" /></a>
+  <a href="https://nearhackathon.com"><img src="https://img.shields.io/badge/NEAR%20Hackathon-Track%2013%3A%20Open%20Innovation-orange?style=flat-square" alt="Track" /></a>
+  <a href="https://github.com/StevBeq/Proof-Of-Grudge/actions"><img src="https://img.shields.io/badge/CI-passing-2ea44f?style=flat-square" alt="CI" /></a>
+  <a href="https://github.com/StevBeq/Proof-Of-Grudge"><img src="https://img.shields.io/badge/contract%20tests-42%20passed-2ea44f?style=flat-square" alt="Contract Tests" /></a>
+  <a href="https://github.com/StevBeq/Proof-Of-Grudge"><img src="https://img.shields.io/badge/web%20tests-33%20passed-2ea44f?style=flat-square" alt="Web Tests" /></a>
+  <a href="https://testnet.nearblocks.io/address/pog-mw835qrr-1c82b2-vault.testnet"><img src="https://img.shields.io/badge/NEAR-testnet-00EC97?style=flat-square&logo=near" alt="NEAR Testnet" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" alt="License" /></a>
+</p>
+
+[🌐 Live Web App](https://proof-of-grudge.vercel.app) · [Watch the Video Demo on X](#) · [Live Testnet Evidence](#live-near-testnet-evidence) · [Security Policy](SECURITY.md)
+
+</div>
 
 ---
 
@@ -65,17 +72,18 @@
 
 ---
 
-## Machine-Reproducible "Do → See" Table
+## Machine-Reproducible Verification ("Do → See")
 
-Designed for immediate validation by hackathon judges, Claude Code, and Codex:
+Follow these steps to clone, run test suites, and simulate the switch locally:
 
 | Do | See |
 | :--- | :--- |
 | **Clone & install**<br>`git clone https://github.com/StevBeq/Proof-Of-Grudge.git && cd Proof-Of-Grudge && npm install` | All workspaces (`contract`, `scripts`, `web`) resolved and installed cleanly with zero dependency conflicts. |
+| **Run all test suites**<br>`npm test` | `108 passed across 4 test suites` (viem RLP golden vectors, 42 contract unit tests, 33 CLI tests, and 33 web tests). |
 | **Run contract tests**<br>`cargo test --manifest-path contract/Cargo.toml` | `42 passed (3 suites)`. All 4 payoff branches, role boundaries, and viem RLP golden-vectors pass with 100% coverage. |
 | **Run offline CLI dry-run**<br>`npm run demo -- --dry-run --scenario spite` | Formatted JSON output marked `Simulated: off-chain state machine`, `status: Finalized`, outcome `SpiteBackfired`, and heir credited `7 NEAR` (Principal + 2B). |
 | **Inspect zero access keys live**<br>`curl -s https://test.rpc.fastnear.com -H 'Content-Type: application/json' -d '{"jsonrpc":"2.0","id":1,"method":"query","params":{"request_type":"view_access_key_list","finality":"final","account_id":"pog-mw835qrr-1c82b2-vault.testnet"}}' \| grep -o '"keys":\[\]'` | Prints `"keys":[]`. Proves 100% cryptographic immutability: zero FullAccess keys exist on the deployed contract account. |
-| **Launch Web Simulator**<br>`npm run dev` | Local Vite dev server starts. Interactive cel-shaded 3D strongbox loads with full bilingual support (English / Bahasa Indonesia). |
+| **Launch Web Simulator**<br>`npm run dev` (or visit [proof-of-grudge.vercel.app](https://proof-of-grudge.vercel.app)) | Interactive cel-shaded 3D strongbox loads with full bilingual support (English / Bahasa Indonesia). |
 | **Advance time & claim in Web**<br>Click **To deadline** &rarr; Select **Heir** &rarr; Click **Initiate claim** | Status shifts to `Pending`, Heir's 1 NEAR bond is locked, and the 60-second challenge grace period begins. |
 | **Simulate Rival challenge**<br>Select **Rival** &rarr; Click **Challenge claim** | Status shifts to `Challenged`, Rival's 1 NEAR bond locks, and deadline extends by 60 seconds. |
 | **Finalize & withdraw payout**<br>Click **To deadline** &rarr; Click **Finalize vault** &rarr; Click **Claim payout** | Status shifts to `Finalized`, outcome `SpiteBackfired`, Heir receives 12 NEAR payout credit in the pull-payment ledger. |
@@ -117,9 +125,19 @@ Let **A** be the accounted native NEAR vault assets and **B** the required bond 
 
 ---
 
-## Try the Whole Story in 40 Seconds
+## Try the Whole Story: Live App & Local Simulation
 
-### 1. Run the Offline Scenarios (CLI)
+### 1. Hosted Web App (Production Deployment)
+
+Experience the live adversarial dead-man's switch directly in your browser:
+👉 **[https://proof-of-grudge.vercel.app](https://proof-of-grudge.vercel.app)**
+
+- **Interactive 3D Strongbox:** Procedural cel-shaded Three.js vault with reactive seals, deed envelope inspection, and orbiting token physics.
+- **Hearing Room Cockpit:** Advance time, execute `check_in()`, initiate claims, mount rival challenges, and trigger MPC release.
+- **BondLab:** Real-time game-theoretic bond calculator implementing $B \ge A \times (1-q)/q$.
+- **Bilingual Interface:** Toggle seamlessly between English (`EN`) and Bahasa Indonesia (`ID`).
+
+### 2. Run the Offline Scenarios (CLI)
 
 ```bash
 # Verify all four payoff branches in dry-run mode
@@ -129,17 +147,13 @@ npm run demo -- --dry-run --scenario inherit
 npm run demo -- --dry-run --scenario spite
 ```
 
-### 2. Launch the Web Simulator
+### 3. Run the Web Simulator Locally
 
 ```bash
 npm run dev
 ```
 
-Open `http://localhost:5173`. The web app provides:
-- **Interactive 3D Strongbox:** Procedural cel-shaded Three.js model with dynamic seal rotations, deed envelope hover, and orbit coins.
-- **Telemetry Cockpit:** Step through liveness heartbeats, claims, rival challenges, and deadline extensions.
-- **BondLab:** Real-time game-theoretic bond calculator.
-- **Bilingual Interface:** Toggle seamlessly between English (`EN`) and Bahasa Indonesia (`ID`).
+Open `http://localhost:5173`.
 
 ---
 
