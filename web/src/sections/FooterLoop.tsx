@@ -86,10 +86,12 @@ export function FooterLoop({
   c,
   locale,
   onLoopToTop,
+  children,
 }: {
   c: Copy;
   locale: Locale;
   onLoopToTop: () => void;
+  children?: React.ReactNode;
 }) {
   const trackRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLElement>(null);
@@ -220,12 +222,12 @@ export function FooterLoop({
       });
 
       // 1. Stage rises from yPercent 100 to 0 (0.00 to 0.38)
-      // Physically ascends over the pinned Limits section like a rising curtain!
+      // Physically ascends over the pinned Limits section like a single rising curtain!
       tl.to(
         stage,
         {
           yPercent: 0,
-          ease: 'power2.out',
+          ease: 'none',
           duration: 0.38,
         },
         0,
@@ -309,6 +311,14 @@ export function FooterLoop({
       </div>
 
       <div className="ge-footer-track" ref={trackRef}>
+        {/* Layer 1 (Stationary Underneath): Limits Section */}
+        {children && (
+          <div className="ge-limits-pinned" aria-label="Protocol Limits">
+            {children}
+          </div>
+        )}
+
+        {/* Layer 2 (The ONLY Rising Curtain Layer): Architectural Finale */}
         <footer className="ge-footer-stage" ref={stageRef} aria-label="Proof-of-Grudge Architectural Finale">
           {/* Top Archival Blueprint Header with Interactive Protocol Telemetry */}
           <div className="ge-footer-topbar">

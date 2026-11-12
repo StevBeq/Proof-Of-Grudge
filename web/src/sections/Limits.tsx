@@ -40,7 +40,7 @@ export function Limits({ c }: { c: Copy }) {
         <h2 id="limits-title">{c.limitsTitle}</h2>
       </header>
 
-      {/* 2x2 Forensic Risk Vectors Matrix */}
+      {/* 2x2 Forensic Risk Vectors Matrix - Exactly 4 Vectors */}
       <div className="limits-grid">
         {vectors.map(v => (
           <article key={v.num} className="limits-card reveal">
@@ -57,19 +57,6 @@ export function Limits({ c }: { c: Copy }) {
           </article>
         ))}
       </div>
-
-      {/* The Core Axiom Banner */}
-      <aside className="limits-axiom-card reveal" aria-label="Core game-theoretic axiom">
-        <div className="axiom-badge mono">
-          <span className="axiom-dot" />
-          <span>CORE AXIOM // SYMMETRIC ESCROW MATRIX</span>
-        </div>
-        <p className="axiom-text">"{c.comparison}"</p>
-        <div className="axiom-meta mono">
-          <span>NEAR TESTNET DOMAIN 0</span>
-          <span>NO FREE VETO // ADVERSARIAL EQUILIBRIUM</span>
-        </div>
-      </aside>
     </section>
   );
 }

@@ -643,13 +643,10 @@ export default function App() {
       </div>
       <Cockpit c={c} locale={locale} onScene={onScene} role={cockpitRole} onRoleChange={setCockpitRole} scenarioRequest={scenarioRequest} entered={cockpitEntered} />
       <BondLab c={c} locale={locale} />
-      {/* Limits & Rising Finale Curtain Stacking Container (Per user Request 2) */}
-      <div className="limits-curtain-container">
-        <div className="limits-sticky-wrap">
-          <Limits c={c} />
-        </div>
-        <FooterLoop c={c} locale={locale} onLoopToTop={handleLoopToTop} />
-      </div>
+      {/* Limits & Rising Finale Curtain (Limits sits pinned inside track while stage rises over it) */}
+      <FooterLoop c={c} locale={locale} onLoopToTop={handleLoopToTop}>
+        <Limits c={c} />
+      </FooterLoop>
     </main>
   </div>;
 }
