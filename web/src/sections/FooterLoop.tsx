@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import type { Copy, Locale } from '../lib/copy';
@@ -92,6 +92,7 @@ export function FooterLoop({
   onLoopToTop: () => void;
 }) {
   const trackRef = useRef<HTMLDivElement>(null);
+  const stageRef = useRef<HTMLElement>(null);
   const gWrapRef = useRef<HTMLDivElement>(null);
   const eWrapRef = useRef<HTMLDivElement>(null);
   const centerSealRef = useRef<HTMLDivElement>(null);
@@ -100,6 +101,8 @@ export function FooterLoop({
   const pctBadgeRef = useRef<HTMLElement>(null);
   const wipeCurtainRef = useRef<HTMLDivElement>(null);
   const loopingRef = useRef(false);
+
+  const [activeHint, setActiveHint] = useState<string | null>(null);
 
   const runSmoothLoop = useCallback(() => {
     if (loopingRef.current) return;
@@ -167,18 +170,22 @@ export function FooterLoop({
 
   useEffect(() => {
     const track = trackRef.current;
+    const stage = stageRef.current;
     const gWrap = gWrapRef.current;
     const eWrap = eWrapRef.current;
     const centerSeal = centerSealRef.current;
     const midLetters = midLettersRef.current;
 
-    if (!track || !gWrap || !eWrap || !midLetters) return;
+    if (!track || !stage || !gWrap || !eWrap || !midLetters) return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
     const ctx = gsap.context(() => {
       const midBlocks = gsap.utils.toArray<HTMLElement>('[data-mid-letter]', midLetters);
 
-      // Start with [G] and [E] locked close together in the center around the Gold H caliper
+      // Start: Stage is pushed completely off-screen at bottom (yPercent: 100)
+      gsap.set(stage, { yPercent: 100 });
+
+      // Letters: [G] and [E] locked close together in the center around Gold H caliper
       gsap.set(gWrap, { xPercent: -50, yPercent: -50, x: -82, scale: 1 });
       gsap.set(eWrap, { xPercent: -50, yPercent: -50, x: 82, scale: 1 });
       if (centerSeal) gsap.set(centerSeal, { xPercent: -50, yPercent: -50, scale: 1, opacity: 1 });
@@ -193,30 +200,48 @@ export function FooterLoop({
           onUpdate: self => {
             if (loopingRef.current) return;
             const p = self.progress;
-            const pct = Math.round(p * 100);
+
+            // Phase 1 (0.00 to 0.38): The Finale UI is rising up and covering Limits.
+            // Progress bar stays strictly 0% until UI fully takes over screen!
+            const activeP = Math.max(0, Math.min(1, (p - 0.38) / 0.62));
+            const pct = Math.round(activeP * 100);
+
             if (progressFillRef.current) {
               progressFillRef.current.style.width = `${pct}%`;
             }
             if (pctBadgeRef.current) {
               pctBadgeRef.current.textContent = `${String(pct).padStart(2, '0')}%`;
             }
-            if (p >= 0.985 && !loopingRef.current) {
+            if (activeP >= 0.985 && !loopingRef.current) {
               runSmoothLoop();
             }
           },
         },
       });
 
-      // [G] and [E] CAD calipers pull apart to the outer flanks while R - U - D - G unfold between them
+      // 1. Stage rises from yPercent 100 to 0 (0.00 to 0.38)
+      // Physically ascends over the pinned Limits section like a rising curtain!
+      tl.to(
+        stage,
+        {
+          yPercent: 0,
+          ease: 'power2.out',
+          duration: 0.38,
+        },
+        0,
+      );
+
+      // 2. Once stage is fully covering viewport (0.42 to 0.92):
+      // [G] and [E] CAD calipers pull apart to outer flanks, revealing R - U - D - G
       tl.to(
         gWrap,
         {
           x: () => -Math.min(window.innerWidth * 0.36, 430),
           scale: 0.96,
           ease: 'power2.inOut',
-          duration: 0.58,
+          duration: 0.44,
         },
-        0.06,
+        0.44,
       );
 
       tl.to(
@@ -225,9 +250,9 @@ export function FooterLoop({
           x: () => Math.min(window.innerWidth * 0.36, 430),
           scale: 0.96,
           ease: 'power2.inOut',
-          duration: 0.58,
+          duration: 0.44,
         },
-        0.06,
+        0.44,
       );
 
       if (centerSeal) {
@@ -238,9 +263,9 @@ export function FooterLoop({
             rotate: 180,
             opacity: 0,
             ease: 'power2.inOut',
-            duration: 0.3,
+            duration: 0.28,
           },
-          0.06,
+          0.44,
         );
       }
 
@@ -250,16 +275,21 @@ export function FooterLoop({
           scale: 1,
           opacity: 1,
           y: 0,
-          stagger: { each: 0.05, from: 'center' },
+          stagger: { each: 0.045, from: 'center' },
           ease: 'back.out(1.35)',
-          duration: 0.48,
+          duration: 0.4,
         },
-        0.18,
+        0.52,
       );
     }, track);
 
     return () => ctx.revert();
   }, [runSmoothLoop]);
+
+  const triggerCaliperPulse = (name: string, info: string) => {
+    setActiveHint(info);
+    window.setTimeout(() => setActiveHint(null), 3200);
+  };
 
   return (
     <>
@@ -279,8 +309,8 @@ export function FooterLoop({
       </div>
 
       <div className="ge-footer-track" ref={trackRef}>
-        <footer className="ge-footer-stage" aria-label="Proof-of-Grudge Architectural Finale">
-          {/* Top Archival Blueprint Header */}
+        <footer className="ge-footer-stage" ref={stageRef} aria-label="Proof-of-Grudge Architectural Finale">
+          {/* Top Archival Blueprint Header with Interactive Protocol Telemetry */}
           <div className="ge-footer-topbar">
             <div className="ge-footer-kicker mono">
               <span className="ge-dot ge-dot-owner" />
@@ -288,13 +318,22 @@ export function FooterLoop({
               <span className="ge-dot ge-dot-rival" />
               <span>{c.caseFile} // ARCHITECTURAL FINALE</span>
             </div>
-            <nav className="ge-footer-nav mono" aria-label="Footer navigation">
-              <a href="#hero">00 HERO</a>
-              <a href="#dossier">01 {c.dossier.toUpperCase()}</a>
-              <a href="#mechanism">02 {c.mechanism.toUpperCase()}</a>
-              <a href="#outcomes">03 {c.outcomes.toUpperCase()}</a>
-              <a href="#cockpit">04 {c.cockpit.toUpperCase()}</a>
-            </nav>
+
+            {/* Replaced Navigation Buttons (Per User Request Image 4) with Interactive Status Widget */}
+            <div className="ge-footer-telemetry mono" aria-label="Protocol Audit Status">
+              <div
+                className="ge-telemetry-badge"
+                role="status"
+                onClick={() => triggerCaliperPulse('audit', locale === 'id' ? 'KONSENSUS MPC TERVERIFIKASI · SELESAI' : 'MPC CONSENSUS AUDITED · FINAL')}
+                title={locale === 'id' ? 'Klik untuk verifikasi status konsensus' : 'Click to inspect consensus audit status'}
+              >
+                <span className="ge-status-live-dot" aria-hidden="true" />
+                <span className="ge-telemetry-status">
+                  {locale === 'id' ? 'AUDIT PROTOKOL: TERVERIFIKASI' : 'PROTOCOL AUDIT: VERIFIED'}
+                </span>
+              </div>
+              <span className="ge-telemetry-spec">SECP256K1 · EIP-1559 · DOMAIN 0</span>
+            </div>
           </div>
 
           {/* Full-screen Drafting Table: [G] and [E] CAD Calipers + Unfolding R - U - D - G */}
@@ -305,15 +344,37 @@ export function FooterLoop({
               <span>PROOF — OF — GRUDGE // ADVERSARIAL INHERITANCE PROTOCOL</span>
             </div>
 
+            {/* Interactive Telemetry Toast Overlay */}
+            {activeHint && (
+              <div className="ge-interactive-hint mono" role="alert">
+                <span className="ge-hint-bullet">●</span>
+                <span>{activeHint}</span>
+              </div>
+            )}
+
             <div className="ge-word-assembly" aria-label="GRUDGE">
               {/* Left CAD Caliper: [ G ] */}
-              <div className="ge-caliper-wrap ge-caliper-g" ref={gWrapRef}>
+              <div
+                className="ge-caliper-wrap ge-caliper-g is-interactive"
+                ref={gWrapRef}
+                onClick={() => triggerCaliperPulse('g', '01 · OWNER // G-LOCK: KEEPER HEARTBEAT KEY VALIDATED')}
+                role="button"
+                tabIndex={0}
+                aria-label="Owner G-Lock Caliper Blueprint"
+              >
                 <div className="ge-caliper-tag mono">01 · OWNER // G-LOCK</div>
                 <CadBlueprintG />
               </div>
 
               {/* Center Gold Heir Caliper Seal */}
-              <div className="ge-center-caliper" ref={centerSealRef} aria-hidden="true">
+              <div
+                className="ge-center-caliper is-interactive"
+                ref={centerSealRef}
+                onClick={() => triggerCaliperPulse('h', '02 · HEIR // BOND H: 1 NEAR REQUIRED FOR CLAIMS')}
+                role="button"
+                tabIndex={0}
+                aria-label="Heir Bond H Seal"
+              >
                 <span>H</span>
                 <small className="mono">1 NEAR</small>
               </div>
@@ -339,7 +400,14 @@ export function FooterLoop({
               </div>
 
               {/* Right CAD Caliper: [ E ] */}
-              <div className="ge-caliper-wrap ge-caliper-e" ref={eWrapRef}>
+              <div
+                className="ge-caliper-wrap ge-caliper-e is-interactive"
+                ref={eWrapRef}
+                onClick={() => triggerCaliperPulse('e', '03 · RIVAL // E-SEAL: 1 NEAR SYMMETRIC BOND OBJECTION')}
+                role="button"
+                tabIndex={0}
+                aria-label="Rival E-Seal Caliper Blueprint"
+              >
                 <div className="ge-caliper-tag mono">06 · RIVAL // E-SEAL</div>
                 <CadBlueprintE />
               </div>
