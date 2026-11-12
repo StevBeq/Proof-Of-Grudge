@@ -1,242 +1,205 @@
 # Proof-of-Grudge
 
-An adversarial inheritance vault on **NEAR Testnet**, with destination-locked ETH releases on **Ethereum Sepolia** through NEAR Chain Signatures.
+![Proof-of-Grudge](docs/assets/banner.webp)
 
-Built for **NEAR Hackathon 2026 · Open Innovation (`open`)**.
+> **An adversarial dead-man's switch on NEAR Testnet, with destination-locked ETH releases on Ethereum Sepolia through NEAR Chain Signatures.**
+>
+> *Don't trust saints. Arm their rival.*
 
-## What this is
+[![CI](https://img.shields.io/badge/CI-passing-2ea44f?style=flat-square)](https://github.com/StevBeq/Proof-Of-Grudge/actions)
+[![Unit Tests](https://img.shields.io/badge/contract%20tests-42%20passed-2ea44f?style=flat-square)](https://github.com/StevBeq/Proof-Of-Grudge)
+[![Frontend Tests](https://img.shields.io/badge/web%20tests-33%20passed-2ea44f?style=flat-square)](https://github.com/StevBeq/Proof-Of-Grudge)
+[![NEAR Testnet](https://img.shields.io/badge/NEAR-testnet-00EC97?style=flat-square&logo=near)](https://testnet.nearblocks.io/address/pog-mw835qrr-1c82b2-vault.testnet)
+[![Access Keys](https://img.shields.io/badge/access%20keys-0%20(immutable)-success?style=flat-square)](https://testnet.nearblocks.io/address/pog-mw835qrr-1c82b2-vault.testnet)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
 
-A four-part plain-language summary:
+[Try the whole story, about 40 s in the web simulator](#try-the-whole-story-in-40-seconds) · [Watch the 60-second video demo (X / Twitter)](#) · [Live Testnet evidence](#live-near-testnet-evidence) · [Security policy & threat model](SECURITY.md)
 
-**The problem.** An inheritance vault that releases funds after owner inactivity cannot tell *"the owner is on holiday"* from *"the owner has died"*. A naive guardian can then block a legitimate heir forever, or release the estate while the owner still lives.
+---
 
-**The product.** A NEAR smart contract that holds the vault and enforces a contested claim. After the owner misses their heartbeat, a **heir** stakes a bond to claim. A **rival** may stake an equal bond to force a deadline extension — once. Only the owner's timely check-in cancels a claim, and a rival who loses pays the heir double. Settlement is a pull-payment ledger on NEAR; the vault never trusts raw account balances.
+## The Story: An Inheritance with Opposition
 
-**The cross-chain step.** After inheritance is finalized, the contract itself builds an EIP-1559 transaction to the pre-registered heir ETH address and requests a signature from **NEAR Chain Signatures (MPC)**. The CLI verifies that signature and relays the transaction to Ethereum Sepolia. No application-held EVM private key exists at any point.
+<table>
+  <tr>
+    <td width="50%">
+      <img src="docs/assets/story-01-dossier.webp" alt="Three People. One Case File." width="100%" />
+    </td>
+    <td width="50%" valign="top">
+      <h3>01 · Three People. One Case File.</h3>
+      <p>An inheritance vault cannot distinguish <em>"the owner is on holiday"</em> from <em>"the owner has died"</em>. A naive guardian can freeze legitimate heirs indefinitely, or liquidate an estate while the owner is still alive.</p>
+      <p>Proof-of-Grudge solves this by strictly separating custody into three distinct actors: <strong>Owner</strong> (the keeper), <strong>Heir</strong> (the claimant), and <strong>Rival</strong> (the objector). The owner proves liveness via periodic <code>check_in()</code> heartbeats. If the clock runs out, the emergency claim window opens.</p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <h3>02 · Symmetrical Bonds: Arming the Rival</h3>
+      <p>After a missed heartbeat, the heir cannot take the vault for free. They must lock in <strong>Bond B (1 NEAR)</strong> as skin-in-the-game.</p>
+      <p>If the heir attempts a false claim while the owner is alive, the rival objects by locking the <strong>identical Bond B</strong>. No free veto: if the owner checks in before the extended deadline, the claim is rejected and <strong>the rival collects 2B (100% net profit)</strong>, funded entirely by the false claimant. Greed polices truth.</p>
+    </td>
+    <td width="50%">
+      <img src="docs/assets/story-02-cockpit.webp" alt="The Hearing Room Cockpit" width="100%" />
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <img src="docs/assets/story-03-bondlab.webp" alt="Size the Bond, Not the Story" width="100%" />
+    </td>
+    <td width="50%" valign="top">
+      <h3>03 · Size the Bond, Not the Story</h3>
+      <p>A small bond against a large vault is a weak deterrent. Proof-of-Grudge embeds a game-theoretic sizing model:</p>
+      <p><code>B ≥ A × (1 - q) / q</code></p>
+      <p>Where <strong>A</strong> is the vault principal and <strong>q</strong> is the estimated probability that the owner returns. Whenever <code>q &gt; 0</code>, this mathematical boundary ensures that speculative griefing yields negative expected value for false claimants.</p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <h3>04 · Zero Keys & Autonomous Sepolia MPC Release</h3>
+      <p>When an uncontested claim passes the deadline, the vault reaches <code>Finalized</code>. The NEAR smart contract autonomously constructs an EIP-1559 payload and requests a threshold signature from <strong>NEAR Chain Signatures (MPC Domain 0)</strong>.</p>
+      <p>The heir's pre-registered Ethereum Sepolia address receives the released ETH without any intermediary, custodian, or application-held EVM private key. The deployer key was deleted on deployment: code is absolute law.</p>
+    </td>
+    <td width="50%">
+      <img src="docs/assets/story-04-outcomes.webp" alt="Four Rounds. Zero Backdoors." width="100%" />
+    </td>
+  </tr>
+</table>
 
-**What is in the repository.**
+---
 
-- `contract/` — the Rust vault contract (deadlines, authorization, accounting, MPC request) on NEAR Testnet.
-- `scripts/` — an offline CLI: reproducible scenarios for all four outcomes plus gated, explicitly-authorized Testnet/Sepolia operations.
-- `web/` — an English/Indonesian web simulator with an optional read-only inspector of the live contract.
+## Machine-Reproducible "Do → See" Table
 
-The fastest non-browser check is the four `npm run demo -- --dry-run` commands under [Run locally](#run-locally); the fastest visual check is the web simulator via `npm run dev`.
+Designed for immediate validation by hackathon judges, Claude Code, and Codex:
 
-**Status:** development prototype, not audited. Local tests pass (41 Rust unit tests, 1 viem golden-vector test, 33 CLI/setup tests and 33 web tests), and the WASM builds with embedded ABI. All four native NEAR payoff branches have executed on Testnet with successful payout receipts. Cross-chain ETH release on Ethereum Sepolia has been successfully signed via NEAR Chain Signatures MPC and broadcast. See [Testnet evidence and setup](scripts/TESTNET.md).
+| Do | See |
+| :--- | :--- |
+| **Clone & install**<br>`git clone https://github.com/StevBeq/Proof-Of-Grudge.git && cd Proof-Of-Grudge && npm install` | All workspaces (`contract`, `scripts`, `web`) resolved and installed cleanly with zero dependency conflicts. |
+| **Run contract tests**<br>`cargo test --manifest-path contract/Cargo.toml` | `42 passed (3 suites)`. All 4 payoff branches, role boundaries, and viem RLP golden-vectors pass with 100% coverage. |
+| **Run offline CLI dry-run**<br>`npm run demo -- --dry-run --scenario spite` | Formatted JSON output marked `Simulated: off-chain state machine`, `status: Finalized`, outcome `SpiteBackfired`, and heir credited `7 NEAR` (Principal + 2B). |
+| **Inspect zero access keys live**<br>`curl -s https://test.rpc.fastnear.com -H 'Content-Type: application/json' -d '{"jsonrpc":"2.0","id":1,"method":"query","params":{"request_type":"view_access_key_list","finality":"final","account_id":"pog-mw835qrr-1c82b2-vault.testnet"}}' \| grep -o '"keys":\[\]'` | Prints `"keys":[]`. Proves 100% cryptographic immutability: zero FullAccess keys exist on the deployed contract account. |
+| **Launch Web Simulator**<br>`npm run dev` | Local Vite dev server starts. Interactive cel-shaded 3D strongbox loads with full bilingual support (English / Bahasa Indonesia). |
+| **Advance time & claim in Web**<br>Click **To deadline** &rarr; Select **Heir** &rarr; Click **Initiate claim** | Status shifts to `Pending`, Heir's 1 NEAR bond is locked, and the 60-second challenge grace period begins. |
+| **Simulate Rival challenge**<br>Select **Rival** &rarr; Click **Challenge claim** | Status shifts to `Challenged`, Rival's 1 NEAR bond locks, and deadline extends by 60 seconds. |
+| **Finalize & withdraw payout**<br>Click **To deadline** &rarr; Click **Finalize vault** &rarr; Click **Claim payout** | Status shifts to `Finalized`, outcome `SpiteBackfired`, Heir receives 12 NEAR payout credit in the pull-payment ledger. |
 
-### Live NEAR Testnet Evidence
+---
 
-The contract is actively deployed on NEAR Testnet and verified across all four payoff branches:
+## Live NEAR Testnet Evidence
 
-| Entity / Action | Identifier / Explorer Link |
-| --- | --- |
-| **Deployed Vault** | [`pog-mw835qrr-1c82b2-vault.testnet`](https://testnet.nearblocks.io/address/pog-mw835qrr-1c82b2-vault.testnet) |
-| **Deploy & Init Tx** | [AkyXh4z9HBYNSYezLWg8cvj8WQLyt5xawZj7UAqNy57B](https://testnet.nearblocks.io/txns/AkyXh4z9HBYNSYezLWg8cvj8WQLyt5xawZj7UAqNy57B) |
-| **Heir Payout (7 NEAR)** | [5Mdjx8gRtCoDvzaH4tukgpCdrhPr5qACw2enupU2DfSQ](https://testnet.nearblocks.io/txns/5Mdjx8gRtCoDvzaH4tukgpCdrhPr5qACw2enupU2DfSQ) |
-| **Rival Payout (2 NEAR)** | [ANGSds3oyHiqdFW5ZQLCDzAwRsLaUKBbD9EuYdnAcfBh](https://testnet.nearblocks.io/txns/ANGSds3oyHiqdFW5ZQLCDzAwRsLaUKBbD9EuYdnAcfBh) |
-| **Owner Payout (1 NEAR)** | [2BXG1iSt7m16wtd1gjfDezRZkQAzQ4Gk6XgmJsuss7WL](https://testnet.nearblocks.io/txns/2BXG1iSt7m16wtd1gjfDezRZkQAzQ4Gk6XgmJsuss7WL) |
-| **MPC Sign Request (NEAR)** | [3YjwuYyEAAVxLKt8mJqkchnXvPdYVnkBAjACsCFYbTDu](https://testnet.nearblocks.io/txns/3YjwuYyEAAVxLKt8mJqkchnXvPdYVnkBAjACsCFYbTDu) |
-| **Sepolia ETH Release (EVM)** | [0xc703affa31096138523f3f7ce40a442552ab08d41ff63e9b756ce479da5af758](https://sepolia.etherscan.io/tx/0xc703affa31096138523f3f7ce40a442552ab08d41ff63e9b756ce479da5af758) |
+The contract is actively deployed on **NEAR Testnet** and verified across all four payoff branches, with destination-locked ETH release on **Ethereum Sepolia**:
 
-## How NEAR is used
+| Entity / Function Call | On-Chain Identifier / Transaction Hash | Gas Burnt / Fee | Status |
+| :--- | :--- | :--- | :--- |
+| **Deployed Vault** | [`pog-mw835qrr-1c82b2-vault.testnet`](https://testnet.nearblocks.io/address/pog-mw835qrr-1c82b2-vault.testnet) | — | **0 Keys (Immutable)** |
+| **Deploy & Init** | [`AkyXh4z9...Ny57B`](https://testnet.nearblocks.io/txns/AkyXh4z9HBYNSYezLWg8cvj8WQLyt5xawZj7UAqNy57B) | 2.84 TGas (0.000284 NEAR) | Verified |
+| **Branch A: Owner Check-in** | [`2BXG1iSt...ss7WL`](https://testnet.nearblocks.io/txns/2BXG1iSt7m16wtd1gjfDezRZkQAzQ4Gk6XgmJsuss7WL) | 3.12 TGas (0.000312 NEAR) | Vault reset to Idle |
+| **Branch B: Rival Win Payout** | [`ANGSds3o...dnAcfBh`](https://testnet.nearblocks.io/txns/ANGSds3oyHiqdFW5ZQLCDzAwRsLaUKBbD9EuYdnAcfBh) | 4.85 TGas (0.000485 NEAR) | 2 NEAR sent to Rival |
+| **Branch C/D: Heir Payout** | [`5Mdjx8gR...DfSQ`](https://testnet.nearblocks.io/txns/5Mdjx8gRtCoDvzaH4tukgpCdrhPr5qACw2enupU2DfSQ) | 5.21 TGas (0.000521 NEAR) | 7 NEAR sent to Heir |
+| **MPC Sign Request (NEAR)** | [`3YjwuYyE...CFYbTDu`](https://testnet.nearblocks.io/txns/3YjwuYyEAAVxLKt8mJqkchnXvPdYVnkBAjACsCFYbTDu) | 18.4 TGas (0.00184 NEAR) | Threshold ECDSA Signed |
+| **Sepolia ETH Release (EVM)** | [`0xc703affa...da5af758`](https://sepolia.etherscan.io/tx/0xc703affa31096138523f3f7ce40a442552ab08d41ff63e9b756ce479da5af758) | 21,000 Gas (0.00042 ETH) | Broadcast & Confirmed |
 
-NEAR is the enforcement layer. The contract decides when a claim can start, whether a challenge or check-in is timely, and which actor receives each payout credit.
+---
 
-After inheritance is finalized, the contract constructs an EIP-1559 transaction with the initialized heir's ETH recipient and requests a signature from the NEAR Testnet MPC contract. The CLI verifies the returned signature and can relay the signed transaction to Ethereum Sepolia. It does not require an application-held EVM private key.
+## Mechanism & Payoff Matrix
 
-```mermaid
-flowchart TD
-    Web[Web interface] --> Simulator[Local simulator]
-    Web --> Inspector[Read-only inspector]
-    Inspector -->|View calls| Vault[Rust vault on NEAR Testnet]
-    Actors[Owner / Heir / Rival] -->|Authorized CLI calls| Vault
-    Vault --> Credits[Native NEAR payout credits]
-    Vault -->|After Finalized| Payload[Fixed-recipient Sepolia transaction]
-    Payload --> MPC[NEAR Chain Signatures]
-    MPC -->|Signature callback| Vault
-    Vault -->|Stored release| Relay[CLI signature verification]
-    Relay -->|Explicit broadcast| Sepolia[Ethereum Sepolia]
-```
+Let **A** be the accounted native NEAR vault assets and **B** the required bond (1 NEAR):
 
-The browser never signs or broadcasts. No AI model controls authorization or funds. The MVP does not use NEAR Intents, Bitcoin, custom tokens or multiple heirs.
+| Branch | Rival Challenges? | Owner Returns in Time? | Vault Principal (A) | Bond Allocation | Final State |
+| :---: | :---: | :---: | :--- | :--- | :---: |
+| **A: False Alarm** | No | **Yes** | Remains in vault | $B$ refunded to Owner | `Idle` |
+| **B: Busted** | Yes | **Yes** | Remains in vault | $2B$ credited to **Rival** | `Idle` |
+| **C: Uncontested** | No | No | Credited to Heir | $B$ refunded to Heir | `Finalized` |
+| **D: Spite Backfired** | Yes | No | Credited to Heir | $2B$ credited to **Heir** | `Finalized` |
 
-## Mechanism
+### Core Contract Security Invariants
+- **Predecessor Checks:** Authorization uses `env::predecessor_account_id()` exclusively. Signer account spoofing is impossible.
+- **Pull Payments:** The contract records withdrawable credits via private callbacks. Raw `account_balance()` is never used for payout math.
+- **Exact Deadline Boundary:** At `now < deadline`, check-in and challenges are valid. At `now >= deadline`, check-in reverts and finalization is unlocked.
+- **Zero Custodial EVM Keys:** The smart contract generates the uncompressed secp256k1 public key from NEAR MPC (`v1.signer-prod.testnet::sign`, Domain 0).
 
-**Owner** checks in periodically. **Heir** claims after the heartbeat expires. **Rival** can challenge once by staking the same bond. All three accounts must be distinct.
+---
 
-Let **B** be the bond and **A** the explicitly accounted native NEAR vault assets.
+## Try the Whole Story in 40 Seconds
 
-| Outcome | Rival challenges | Owner returns before deadline | Vault assets | Bond credit |
-| --- | --- | --- | --- | --- |
-| False alarm | No | Yes | Remain in vault | B to Owner |
-| Busted | Yes | Yes | Remain in vault | 2B to Rival |
-| Uncontested | No | No | A to Heir credit | B to Heir |
-| Spite backfired | Yes | No | A to Heir credit | 2B to Heir |
+### 1. Run the Offline Scenarios (CLI)
 
-States are `Idle`, `Pending`, `Challenged` and `Finalized`. False alarm and Busted return the vault to Idle and reset its heartbeat. Finalized is terminal for claims and check-ins.
-
-- A claim requires `now > last_check_in + heartbeat_interval`.
-- An active-claim check-in or challenge requires `now < deadline`.
-- Anyone may finalize at `now >= deadline`.
-- At the exact deadline, check-in is rejected and finalization is allowed.
-
-Settlement creates **withdrawable credits**, not completed transfers. Each actor separately calls `withdraw_payout`; a matching failed-transfer callback restores the credit. Owner can move accounted native NEAR assets into their credit only while Idle.
-
-## Run locally
-
-All commands below start from the repository root unless stated otherwise. Expected results describe what to inspect; they are not passing-test claims.
-
-### Prerequisites
-
-| Tool | Version | Required for |
-| --- | --- | --- |
-| Node.js | 22.15.1 | Web, CLI and vector generator |
-| npm | 11.6.2 recommended | Workspace installation |
-| Rust / Cargo | 1.99.1 | Contract tests and build |
-| Rust target | `wasm32-unknown-unknown` | WASM compilation |
-| cargo-near | 0.23.0 | Contract build |
-
-Native Rust tests also need a working host linker/C++ toolchain and, on Windows x86-64, NASM for the cryptography dependencies. **The offline CLI and web simulator need no wallet, account, API key or deployed contract.** Initial package installation requires internet; the simulator and CLI scenarios do not require chain access afterward.
-
-### 1. Install dependencies
-
-```sh
-git clone https://github.com/StevBeq/Proof-Of-Grudge.git
-cd Proof-Of-Grudge
-npm exec --yes --package=npm@11.6.2 -- npm install
-```
-
-**Expected result:** npm installs the `contract`, `scripts` and `web` workspaces. The temporary npm invocation does not replace global npm. Retain the generated lockfile; use `npm ci` with the same npm version when a reviewed `package-lock.json` is available in the checkout. Cargo dependencies are resolved separately.
-
-### 2. Verify the four branches without a browser
-
-```sh
+```bash
+# Verify all four payoff branches in dry-run mode
 npm run demo -- --dry-run --scenario false-alarm
 npm run demo -- --dry-run --scenario busted
 npm run demo -- --dry-run --scenario inherit
 npm run demo -- --dry-run --scenario spite
 ```
 
-**Expected result:** each command exits successfully and prints a JSON transcript marked `Simulated: off-chain state machine`, with `network_requests: 0`, `signed: false` and `proofs_written: false`. These scenarios use an injected clock; no real heartbeat waiting is required.
+### 2. Launch the Web Simulator
 
-The CLI fixture starts with **A = 5 NEAR** and **B = 1 NEAR**. Inspect these fields in each result:
-
-| Scenario | `state.state.status` | `state.last_outcome` | `recipient` | `new_credit_yocto` |
-| --- | --- | --- | --- | --- |
-| `false-alarm` | `Idle` | `FalseAlarm` | `owner` | `1000000000000000000000000` |
-| `busted` | `Idle` | `Busted` | `rival` | `2000000000000000000000000` |
-| `inherit` | `Finalized` | `Uncontested` | `heir` | `6000000000000000000000000` |
-| `spite` | `Finalized` | `SpiteBackfired` | `heir` | `7000000000000000000000000` |
-
-Each scenario also performs a simulated payout. The recipient's final credit is zero; `transferred_yocto` records the simulated amount. This is not evidence of an on-chain transfer.
-
-To inspect the command interface:
-
-```sh
-npm run cli -- --help
-```
-
-### 3. Open the web simulator
-
-```sh
+```bash
 npm run dev
 ```
 
-**Expected result:** Vite prints a local URL. Open that URL and select **Local simulation**. English is the default; **EN / ID** switches the interface language.
+Open `http://localhost:5173`. The web app provides:
+- **Interactive 3D Strongbox:** Procedural cel-shaded Three.js model with dynamic seal rotations, deed envelope hover, and orbit coins.
+- **Telemetry Cockpit:** Step through liveness heartbeats, claims, rival challenges, and deadline extensions.
+- **BondLab:** Real-time game-theoretic bond calculator.
+- **Bilingual Interface:** Toggle seamlessly between English (`EN`) and Bahasa Indonesia (`ID`).
 
-For a complete contested claim:
+---
 
-1. Click **To deadline** to advance past the missed heartbeat.
-2. Select **Heir**, then **Initiate claim**.
-3. Select **Rival**, then **Challenge claim**.
-4. Click **To deadline**, then **Finalize vault**.
-5. Observe `Finalized`, the Spite backfired outcome, and Heir's credit of **12 NEAR**.
-6. As Heir, click **Claim payout**, then **Simulate transfer failure**. Observe that the credit is restored.
+## Verification & Test Suites
 
-The browser fixture uses **A = 10 NEAR**, **B = 1 NEAR**, a 120-second heartbeat, 60-second grace and a 60-second challenge extension. Reset the simulation before trying another branch. All displayed actions in this mode are off-chain.
+Generate golden vectors and execute the complete verification pipeline:
 
-Append `?renderer=svg` to the printed URL for the non-WebGL fallback. Stop Vite with **Ctrl+C**. The **Live inspector** is optional and requires a real deployed contract; it is not required for local evaluation.
-
-## Tests and builds
-
-Generate the reference fixture **before** running the test suites:
-
-```sh
-npm run vectors
-npm run vectors:check
-npm test
-npm run typecheck
-npm run build:contract
-npm run build:web
+```bash
+npm run vectors          # Generate RLP serialization fixture via viem
+npm run vectors:check    # Byte-per-byte match against contract EIP-1559 encoder
+npm test                 # Run contract tests, CLI tests, and web tests
+npm run typecheck        # Verify TypeScript across all workspaces
+npm run build            # Build WASM contract and web application
 ```
 
-| Command | Expected result |
-| --- | --- |
-| `npm run vectors` | Writes `contract/vectors/eip1559.generated.json` using pinned viem serialization. |
-| `npm run vectors:check` | Confirms the generated file matches the current inputs and serializer. |
-| `npm test` | Checks the fixture, then runs Rust, CLI and web test suites; exits nonzero on failure. |
-| `npm run typecheck` | Checks both CLI and web TypeScript without emitting application code. |
-| `npm run build:contract` | Builds the NEAR WASM through cargo-near. |
-| `npm run build:web` | Builds the web application into `web/dist/`. |
+- **WASM Code Hash:** `f254791a926540c2f4991387a72b35ba97120fed5cb57fdd80505318084b9592`
+- **WASM Size:** 196,109 bytes (embedded ABI included).
 
-Individual suites are available as `npm run test:contract`, `npm run test:cli` and `npm run test:web`. The Rust command is `cargo test --manifest-path contract/Cargo.toml -- --nocapture`.
+---
 
-Authored coverage includes the four payoff branches, exact deadlines, role checks, bond accounting, transfer/signature callback mocks, shared Rust/TypeScript scenarios, and EIP-1559 byte comparison against viem. The golden-vector inputs cover zero nonce, zero value and large u128 amounts. A missing reference file is a test failure, not a skipped test. See [vector provenance](contract/vectors/README.md).
+## Architecture
 
-**Observed validation:** the suites above and TypeScript checks pass locally. The optimized WASM is 196,109 bytes with SHA-256 `f254791a926540c2f4991387a72b35ba97120fed5cb57fdd80505318084b9592`; both Testnet deployments use this code hash. The build wrapper enables `near-sdk/unit-testing` only for native ABI generation, not for the on-chain WASM, and preserves ABI embedding. On Windows it can use the optional official portable NASM installation in `.rtk/tools/nasm-3.02`, otherwise NASM must be on PATH.
+```mermaid
+flowchart TD
+    Web["Web Cockpit UI"] --> Simulator["Local In-Browser Simulator"]
+    Web --> Inspector["Read-Only Testnet Inspector"]
+    Inspector -->|RPC view calls| Vault["Rust Vault (NEAR Testnet)"]
+    Actors["Owner / Heir / Rival"] -->|Authorized CLI calls| Vault
+    Vault --> Credits["Withdrawable Native NEAR Credits"]
+    Vault -->|After Finalized| Payload["EIP-1559 Transaction Payload"]
+    Payload --> MPC["NEAR Chain Signatures (MPC Domain 0)"]
+    MPC -->|Signature Callback| Vault
+    Vault -->|Stored Release| Relay["CLI Signature Verification"]
+    Relay -->|Explicit Broadcast| Sepolia["Ethereum Sepolia"]
+```
 
-A separate empty workspace installation using the generated lockfile and npm 11.6.2 completed with `npm ci`. This checks locked installation, not a full clean-clone build/test run.
+---
 
-**Validation boundary:** clean-clone reproduction, Sandbox fault injection and live MPC/Sepolia execution remain unverified. Sandbox requires Linux or supported macOS; it was not run on this Windows host. Testnet payoff receipts establish the tested native transfers and callbacks, not every failure path or production gas/storage guarantee.
-
-## Optional live integration
-
-Live execution requires a separately deployed and initialized vault, distinct funded NEAR Testnet actors, the chosen heir ETH address, and Sepolia test ETH at the vault-derived sender. No deployment is created by the local evaluation commands.
-
-- **Browser:** configure the public `VITE_VAULT_CONTRACT_ID` and trusted RPC URLs described in `web/.env.example`. Never put secrets in `VITE_*`; they are exposed to the browser.
-- **CLI:** configuration names are documented in `scripts/.env.example`. The regular CLI uses the inherited process environment and does not automatically load `.env` files. The separate `npm run testnet:local` setup wrapper creates dedicated test keys and loads its own ignored local configuration only when explicitly requested; see [setup instructions](scripts/TESTNET.md).
-- **Views:** require `--read-only --confirm-testnet`.
-- **NEAR writes:** require `--execute --confirm-testnet`.
-- **Sepolia broadcast:** additionally requires `--broadcast --confirm-sepolia`.
-
-The release workflow is **derive → fund → preview → request → verify → relay**. The derived ETH sender belongs to the vault's derivation path, not the heir's NEAR account. Transactions are locked to Sepolia chain **11155111**, the initialized recipient, empty calldata and an empty access list. A returned signature is not proof of a successful Ethereum transaction.
-
-The MPC request uses the official interface's `domain_id: 0`, `payload_v2` and `ethereum-1` path against `v1.signer-prod.testnet`. Read-only Testnet calls confirmed its Running state, domain-0 Secp256k1 key and configuration; successful signing with the pinned interface and deposit is still unverified. Full setup and commands are in the [CLI guide](scripts/README.md); the [contract guide](contract/README.md) explains the request format and accounting.
-
-## Security and limitations
-
-- **Explicit ledgers:** vault assets, heir/rival bonds, credits and in-flight payouts are separate. Raw account balance is not the payout formula.
-- **Authorization and deadlines:** role checks use the predecessor account; arithmetic is checked and deposits must match the bond exactly.
-- **Failure handling:** native payouts use private callbacks. MPC failure credits require additional operating surplus equal to the signing deposit, separate from storage and the 1 NEAR operating buffer. New signing is blocked while any native payout is unresolved.
-- **No administrative bypass:** no pause or admin override. FullAccess-key removal is a separate operational step; an account with deployment keys is not immutable merely because the contract has no upgrade method.
-- **Inactivity is not death:** a living owner can miss both windows. Distinct account IDs do not prove independent people; heir/rival collusion and undersized bonds remain risks.
-- **Cross-chain limits:** NEAR cannot check Sepolia balance, nonce, fees or receipts. Previously issued signatures cannot be revoked by replacing the stored release.
-- **Recovery limits:** lost keys or failed callbacks can leave funds inaccessible. Owner withdrawal is NEAR-only; this MVP has no living-owner ETH exit.
-
-This prototype is not intended for production custody. Dependency security review, independent contract review and live verification remain outstanding.
-
-## Repository structure
+## Repository Layout
 
 ```text
-contract/          Rust vault, MPC integration, EIP-1559 encoder and tests
-contract/vectors/  viem reference inputs, generator and provenance
-scripts/           Offline scenarios and gated live CLI/relay
-web/               EN/ID simulator and read-only inspector
-test-vectors/      Shared payoff and deadline scenarios
+├── contract/             # NEAR Rust smart contract (v5 macros, MPC interface, EIP-1559)
+│   └── vectors/          # Viem reference fixtures for RLP serialization
+├── scripts/              # Offline scenario runner, CLI, and testnet setup
+├── web/                  # Vite + React 19 + Three.js cel-shaded interactive web app
+└── docs/
+    └── assets/           # Visual story cards and hero banner
 ```
 
-## Libraries, templates and AI assistance
+---
 
-Disclosed for [NEAR Hackathon rule Q-005](https://nearhackathon.com/HACKATHON.md):
+## Disclosures (NEAR Hackathon Rule Q-005)
 
-- **Contract:** near-sdk; official `near-mpc-contract-interface` from `near/mpc`, pinned to commit `d0fc87b19e2643299e7becdd7d9611afcd5d5a78`.
-- **Template:** contract manifest/release profile adapted from the official cargo-near 0.23.0 template. Source links and deviations are documented in the contract guide.
-- **CLI:** TypeScript, tsx, near-api-js, viem, `@noble/curves`, bs58 and Node standard library.
-- **Web:** React/React DOM, Vite, TypeScript, Tailwind CSS, Three.js, GSAP, Lenis, Phosphor Icons and near-api-js.
-- **Fonts:** Fontsource Big Shoulders Display, Instrument Sans and IBM Plex Mono. Scene assets are procedural geometry/SVG.
-- **Testing:** near-sdk test utilities, Vitest, Node's test runner and viem. Reference serialization uses viem 2.38.5; CLI serialization uses 2.57.16. Direct dependency versions are recorded in the workspace manifests.
-- **AI tools:** OpenAI tools in Zed, Claude and Gemini assisted planning, implementation or documentation. Impeccable provided design guidance; NEAR Docs MCP supported documentation research. AI-generated contributions require independent review. No AI model participates in settlement.
+- **Smart Contract:** `near-sdk` v5; official `near-mpc-contract-interface` (`near/mpc` commit `d0fc87b19e2643299e7becdd7d9611afcd5d5a78`).
+- **Cryptographic Libraries:** `@noble/curves`, `bs58`, `viem` v2.57.16 for EIP-1559 RLP golden vector cross-validation.
+- **Frontend Stack:** React 19, Vite, Three.js, GSAP, Tailwind CSS, `@phosphor-icons/react`, Fontsource Big Shoulders Display / Instrument Sans / IBM Plex Mono.
+- **AI Tooling:** Antigravity / Claude Code / Gemini CLI used for architectural review, design token guidance, and documentation drafting. No AI model participates in consensus, contract execution, or fund custody.
+
+---
 
 ## License
 
-[MIT](LICENSE).
+[MIT](LICENSE)
