@@ -12,13 +12,6 @@ export function Mechanism({ c, step, onSelect }: { c: Copy; step: MechanismStep 
   return (
     <section id="mechanism" className="section mechanism-section" aria-labelledby="mechanism-title">
       <div className="mechanism-object reveal">
-        <div className="mechanism-object-cradle" aria-hidden="true">
-          <span className="cradle-crosshair tl">+</span>
-          <span className="cradle-crosshair tr">+</span>
-          <span className="cradle-crosshair bl">+</span>
-          <span className="cradle-crosshair br">+</span>
-          <span className="cradle-label mono">TARGET COORD // 3D APERTURE SPEC</span>
-        </div>
         <div id="mechanism-scene" className="scene-anchor" role="img" aria-label={c.scene} />
         <p className="caption">{c.scene}</p>
         <p className="mechanism-readout mono" role="status" aria-live="polite">

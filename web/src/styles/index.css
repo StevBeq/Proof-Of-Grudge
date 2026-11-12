@@ -594,7 +594,6 @@ small { font-size: .75rem; }
 .case-dossier-zone {
   position: relative;
   width: 100%;
-  border-top: 2px solid var(--line);
   border-bottom: 2px solid var(--line);
 }
 
@@ -616,31 +615,6 @@ small { font-size: .75rem; }
   background-size: 32px 32px;
 }
 
-/* Zone Top Forensic Bar */
-.forensic-zone-bar {
-  position: relative;
-  z-index: 2;
-  border-bottom: 1.5px solid var(--hairline);
-  background: rgba(22, 19, 13, 0.035);
-  padding: .55rem 1.5rem;
-}
-.forensic-zone-bar-inner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  max-width: 1100px;
-  margin-inline: auto;
-  font-size: .6875rem;
-  letter-spacing: .12em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-.forensic-bar-crosshair {
-  color: var(--ink-soft);
-  font-weight: 300;
-}
-
 /* Faded Rubber Stamps (Stempel Berkas Investigasi) */
 .forensic-stamp {
   position: absolute;
@@ -649,9 +623,9 @@ small { font-size: .75rem; }
 }
 
 .forensic-stamp-dossier {
-  top: 60px;
-  right: clamp(20px, 7vw, 110px);
-  transform: rotate(-6.5deg);
+  top: clamp(120px, 16vh, 200px);
+  right: clamp(24px, 5vw, 100px);
+  transform: rotate(-6deg);
   opacity: 0.9;
 }
 .forensic-stamp-dossier .stamp-frame {
@@ -691,8 +665,8 @@ small { font-size: .75rem; }
 }
 
 .forensic-stamp-mechanism {
-  bottom: 80px;
-  left: clamp(24px, 8vw, 130px);
+  bottom: clamp(150px, 18vh, 230px);
+  left: clamp(24px, 6vw, 110px);
   transform: rotate(11deg);
   opacity: 0.8;
 }
@@ -725,23 +699,64 @@ small { font-size: .75rem; }
 .forensic-ruler-left { left: 4px; }
 .forensic-ruler-right { right: 4px; }
 
-/* Dossier Card Polish */
+/* ---------- Dossier ---------- */
+.dossier-section {
+  width: min(1280px, calc(100% - 48px));
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-block: clamp(1.25rem, 3vh, 2.5rem);
+}
+.dossier-section .section-heading {
+  margin-bottom: 1.25rem;
+  max-width: 56rem;
+}
+.dossier-section .chapter-mark {
+  font-size: clamp(1.8rem, 3.2vw, 2.4rem);
+  margin-bottom: .25rem;
+}
+.dossier-section .watching-chip {
+  margin-top: .65rem;
+  padding: .4rem .75rem;
+  font-size: .8125rem;
+}
+.dossier-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+  align-items: stretch;
+}
+.dossier-card {
+  position: relative;
+  background: #FFF8E8;
+  border: 2px solid var(--ink);
+  padding: 1.15rem 1.25rem;
+  box-shadow: 4px 4px 0 var(--ink);
+  display: flex;
+  flex-direction: column;
+}
+.dossier-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 6px; }
+.dossier-owner::before { background: var(--owner); }
+.dossier-heir::before { background: var(--heir); }
+.dossier-rival::before { background: var(--rival); }
+
 .dossier-card-meta {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: .6rem;
-  padding-bottom: .4rem;
+  margin-bottom: .45rem;
+  padding-bottom: .3rem;
   border-bottom: 1px dashed var(--hairline);
 }
 .dossier-card-tag {
-  font-size: .6875rem;
+  font-size: .625rem;
   letter-spacing: .12em;
   color: var(--muted);
   font-weight: 600;
 }
 .dossier-card-status {
-  font-size: .625rem;
+  font-size: .5625rem;
   letter-spacing: .08em;
   color: var(--ink-soft);
 }
@@ -760,36 +775,94 @@ small { font-size: .75rem; }
 .dossier-card-crosshair.tl { top: 6px; left: 8px; }
 .dossier-card-crosshair.br { bottom: 6px; right: 8px; }
 
-/* Mechanism Cradle Polish */
-.mechanism-object-cradle {
-  position: absolute;
-  inset: -12px;
-  pointer-events: none;
-  border: 1px dashed var(--hairline);
-  border-radius: var(--radius-panel);
+.dossier-card-header {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  margin-bottom: .25rem;
 }
-.cradle-crosshair {
-  position: absolute;
+.dossier-seal {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 2px solid var(--ink);
+  font-family: 'Big Shoulders Display', sans-serif;
+  font-weight: 800;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+  margin-bottom: 0;
+}
+.dossier-owner .dossier-seal { background: var(--owner); color: #FFF8E8; }
+.dossier-heir .dossier-seal { background: var(--heir); color: var(--ink); }
+.dossier-rival .dossier-seal { background: var(--rival); color: #FFF8E8; }
+
+.dossier-card-titles {
+  min-width: 0;
+}
+.dossier-card h3 {
+  font-size: 1.35rem;
+  line-height: 1.05;
+  font-family: 'Big Shoulders Display', sans-serif;
+  text-transform: uppercase;
+  margin: 0;
+}
+.dossier-role {
   font-family: 'IBM Plex Mono', monospace;
-  font-size: .9375rem;
-  font-weight: 300;
-  color: var(--hairline);
-  line-height: 1;
+  font-size: .75rem;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  margin-top: .15rem;
+  margin-bottom: 0;
 }
-.cradle-crosshair.tl { top: -6px; left: -5px; }
-.cradle-crosshair.tr { top: -6px; right: -5px; }
-.cradle-crosshair.bl { bottom: -6px; left: -5px; }
-.cradle-crosshair.br { bottom: -6px; right: -5px; }
-.cradle-label {
-  position: absolute;
-  top: -10px;
-  right: 18px;
-  background: var(--paper);
-  padding: 0 6px;
-  font-size: .5625rem;
-  letter-spacing: .14em;
-  color: var(--muted);
+.dossier-owner .dossier-role { color: var(--owner); }
+.dossier-heir .dossier-role { color: #8A6D00; }
+.dossier-rival .dossier-role { color: var(--rival); }
+
+.dossier-desc {
+  color: var(--ink-soft);
+  font-size: .875rem;
+  line-height: 1.45;
+  margin-top: .4rem;
+  flex: 1;
 }
+.dossier-button {
+  width: 100%;
+  margin-top: .75rem;
+  min-height: 40px;
+  padding: .45rem .75rem;
+  font-size: .875rem;
+}
+.dossier-card.is-active { outline: 3px solid var(--ink); outline-offset: -3px; background: var(--surface); }
+.dossier-card.is-active .dossier-button { background: var(--ink); color: var(--paper); }
+
+/* ---------- Mechanism ---------- */
+.mechanism-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(2.5rem, 5vw, 6rem);
+  padding-block: clamp(60px, 8vh, 100px) clamp(100px, 14vh, 160px);
+  align-items: start;
+}
+.mechanism-object {
+  position: sticky;
+  top: max(88px, calc(50dvh - 200px));
+  align-self: start;
+}
+.mechanism-object .scene-anchor { height: clamp(280px, 30vw, 360px); }
+.mechanism-object .caption { text-align: center; margin-top: .5rem; }
+.mechanism-copy { padding-top: 0; }
+.mechanism-steps { list-style: none; margin: 0; padding: 0; }
+.mechanism-step { margin-top: 1rem; }
+.mechanism-step-toggle {
+  width: 100%; text-align: left; display: flex; gap: 1rem; align-items: flex-start;
+  background: #FFF8E8; box-shadow: 3px 3px 0 var(--ink); min-height: 0; padding: 1.25rem;
+}
+.mechanism-step-toggle:hover { background: var(--surface); }
+.mechanism-step.is-active .mechanism-step-toggle { background: var(--ink); color: var(--paper); }
+.mechanism-step.is-active .mechanism-step-body { color: var(--paper); }
 .mechanism-step-head {
   display: flex;
   align-items: baseline;
@@ -803,56 +876,6 @@ small { font-size: .75rem; }
 .mechanism-step.is-active .mechanism-step-code {
   color: rgba(255, 248, 232, 0.7);
 }
-
-/* ---------- Dossier ---------- */
-.dossier-section { padding-block: 90px; }
-.dossier-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; }
-.dossier-card {
-  position: relative;
-  background: #FFF8E8;
-  border: 2px solid var(--ink);
-  padding: 1.5rem;
-  box-shadow: 4px 4px 0 var(--ink);
-}
-.dossier-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 8px; }
-.dossier-owner::before { background: var(--owner); }
-.dossier-heir::before { background: var(--heir); }
-.dossier-rival::before { background: var(--rival); }
-.dossier-seal {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 48px; height: 48px; border-radius: 50%;
-  border: 2.5px solid var(--ink);
-  font-family: 'Big Shoulders Display', sans-serif; font-weight: 800; font-size: 1.4rem;
-  margin-bottom: 1rem;
-}
-.dossier-owner .dossier-seal { background: var(--owner); color: #FFF8E8; }
-.dossier-heir .dossier-seal { background: var(--heir); color: var(--ink); }
-.dossier-rival .dossier-seal { background: var(--rival); color: #FFF8E8; }
-.dossier-card h3 { font-size: 1.5rem; font-family: 'Big Shoulders Display', sans-serif; text-transform: uppercase; }
-.dossier-role { font-family: 'IBM Plex Mono', monospace; font-size: .8125rem; text-transform: uppercase; letter-spacing: .08em; margin-top: .35rem; }
-.dossier-owner .dossier-role { color: var(--owner); }
-.dossier-heir .dossier-role { color: #8A6D00; }
-.dossier-rival .dossier-role { color: var(--rival); }
-.dossier-desc { color: var(--ink-soft); margin-top: .75rem; }
-.dossier-button { width: 100%; margin-top: 1.25rem; }
-.dossier-card.is-active { outline: 3px solid var(--ink); outline-offset: -3px; background: var(--surface); }
-.dossier-card.is-active .dossier-button { background: var(--ink); color: var(--paper); }
-
-/* ---------- Mechanism ---------- */
-.mechanism-section { display: grid; grid-template-columns: 1fr 1fr; gap: 6rem; padding-block: 110px 140px; align-items: start; }
-.mechanism-object { position: sticky; top: 15vh; }
-.mechanism-object .scene-anchor { height: 360px; }
-.mechanism-object .caption { text-align: center; margin-top: .5rem; }
-.mechanism-copy { padding-top: 0; }
-.mechanism-steps { list-style: none; margin: 0; padding: 0; }
-.mechanism-step { margin-top: 1rem; }
-.mechanism-step-toggle {
-  width: 100%; text-align: left; display: flex; gap: 1rem; align-items: flex-start;
-  background: #FFF8E8; box-shadow: 3px 3px 0 var(--ink); min-height: 0; padding: 1.25rem;
-}
-.mechanism-step-toggle:hover { background: var(--surface); }
-.mechanism-step.is-active .mechanism-step-toggle { background: var(--ink); color: var(--paper); }
-.mechanism-step.is-active .mechanism-step-body { color: var(--paper); }
 .mechanism-step-num { font-size: 1.75rem; line-height: 1; }
 .mechanism-step-title { display: block; font-family: 'Big Shoulders Display', sans-serif; font-weight: 800; font-size: 1.35rem; text-transform: uppercase; }
 .mechanism-step-body { display: block; margin-top: .5rem; color: var(--ink-soft); font-weight: 400; }
@@ -1368,7 +1391,7 @@ small { font-size: .75rem; }
 
 /* ---------- Chapter sizing: every section stops for reading ---------- */
 .section { scroll-margin-top: 110px; }
-.dossier-section, .outcomes-section, .cockpit-section, .bond-lab, .limits-section {
+.outcomes-section, .cockpit-section, .bond-lab, .limits-section {
   min-height: 0; display: flex; flex-direction: column; justify-content: center;
   padding-block: clamp(3rem, 8vh, 5rem);
 }

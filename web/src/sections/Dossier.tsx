@@ -29,9 +29,13 @@ export function Dossier({ c, role, onSelect }: { c: Copy; role: Role; onSelect: 
                 <span className="dossier-card-tag mono">DOC-0{index + 1} // {card.key.toUpperCase()}</span>
                 <span className="dossier-card-status mono">{active ? '● ACTIVE FOCUS' : '○ STANDBY'}</span>
               </div>
-              <span className="dossier-seal" aria-hidden="true">{card.seal}</span>
-              <h3>{c[card.key]}</h3>
-              <p className="dossier-role">{card.title}</p>
+              <div className="dossier-card-header">
+                <span className="dossier-seal" aria-hidden="true">{card.seal}</span>
+                <div className="dossier-card-titles">
+                  <h3>{c[card.key]}</h3>
+                  <p className="dossier-role">{card.title}</p>
+                </div>
+              </div>
               <p className="dossier-desc">{card.desc}</p>
               <button type="button" className="button-secondary dossier-button" aria-pressed={active} onClick={() => onSelect({ role: card.key, focus: card.key })}>
                 {active ? `✓ ${c.actAs(c[card.key])}` : c.actAs(c[card.key])}

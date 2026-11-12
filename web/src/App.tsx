@@ -510,17 +510,6 @@ export default function App() {
           <div className="forensic-edge-ruler forensic-ruler-right" />
         </div>
 
-        {/* Zone Top Forensic Bar */}
-        <div className="forensic-zone-bar" aria-hidden="true">
-          <div className="forensic-zone-bar-inner">
-            <span className="mono">RECORD ARCHIVE // REF: POG-EVIDENCE-2026-T</span>
-            <span className="forensic-bar-crosshair">+</span>
-            <span className="mono">JURISDICTION: NEAR TESTNET &amp; ETHEREUM SEPOLIA</span>
-            <span className="forensic-bar-crosshair">+</span>
-            <span className="mono">CHAIN SIGNATURES // SECP256K1 DOMAIN 0</span>
-          </div>
-        </div>
-
         <Dossier c={c} role={cockpitRole} onSelect={handleDossier} />
         <Mechanism c={c} step={mechanismStep} onSelect={handleMechanism} />
       </div>
