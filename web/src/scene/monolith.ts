@@ -672,6 +672,9 @@ export function createMonolith(canvas: HTMLCanvasElement) {
   let lastResetTrigger = sceneInput.resetTrigger;
   let shakeStart = -10;
   let lastSeconds = 0;
+  let smoothedScrollYaw = 0;
+  let smoothedParallaxYaw = 0;
+  let smoothedParallaxPitch = 0;
 
   // Peripheral side-arc transition state (routes 3D strongbox along screen margins so it never covers center text)
   let lastAnchorId: string | null = null;
@@ -799,7 +802,9 @@ export function createMonolith(canvas: HTMLCanvasElement) {
 
   function applyStateTransition(seconds: number) {
     const derived = deriveStrongboxPose(sceneInput);
-    const sig = `${sceneInput.status}:${sceneInput.outcome}:${derived.sealH}:${derived.sealR}:${derived.lidOpen}:${sceneInput.roleFocus ?? ''}`;
+    const isScrubbingLid = sceneInput.lidOpen !== null;
+    const lidSig = isScrubbingLid ? 'scrub' : derived.lidOpen.toFixed(1);
+    const sig = `${sceneInput.status}:${sceneInput.outcome}:${derived.sealH}:${derived.sealR}:${lidSig}:${sceneInput.roleFocus ?? ''}`;
 
     if (sig !== previousSignature) {
       previousSignature = sig;
@@ -810,8 +815,8 @@ export function createMonolith(canvas: HTMLCanvasElement) {
       }
 
       gsap.to(pose, {
-        lidAngle: -derived.lidOpen * 1.16,
-        deedLift: derived.lidOpen * 0.46,
+        lidAngle: isScrubbingLid ? pose.lidAngle : -derived.lidOpen * 1.16,
+        deedLift: isScrubbingLid ? pose.deedLift : derived.lidOpen * 0.46,
         sealHDepth: derived.sealH ? 0.74 : 0.84,
         sealHRot: derived.sealH ? Math.PI * 0.5 : 0,
         sealRDepth: derived.sealR ? 0.74 : 0.84,
@@ -824,17 +829,17 @@ export function createMonolith(canvas: HTMLCanvasElement) {
         orbitTilt: derived.orbitTilt,
         coinHScale: derived.coinHActive ? 1.16 : 1,
         coinRScale: derived.coinRActive ? 1.18 : 1,
-        envelopeFlapAngle: -derived.envelopeOpen * Math.PI * 0.86,
-        envelopeCardLift: derived.envelopeOpen * 0.24,
-        gleamScale: derived.gleamIntensity > 0.01 ? derived.gleamIntensity : 0.001,
-        gleamLift: derived.gleamIntensity * 0.44,
-        duration: 0.65,
-        ease: 'expo.inOut',
+        envelopeFlapAngle: isScrubbingLid ? pose.envelopeFlapAngle : -derived.envelopeOpen * Math.PI * 0.86,
+        envelopeCardLift: isScrubbingLid ? pose.envelopeCardLift : derived.envelopeOpen * 0.24,
+        gleamScale: isScrubbingLid ? pose.gleamScale : (derived.gleamIntensity > 0.01 ? derived.gleamIntensity : 0.001),
+        gleamLift: isScrubbingLid ? pose.gleamLift : derived.gleamIntensity * 0.44,
+        duration: 0.55,
+        ease: 'power2.out',
         overwrite: 'auto',
       });
 
-      // Auto-close strongbox lid and deed after 5 seconds
-      if (derived.lidOpen > 0.05) {
+      // Auto-close strongbox lid and deed after 5 seconds ONLY for discrete finalized state (not during scroll scrub!)
+      if (!isScrubbingLid && derived.lidOpen > 0.05) {
         lidAutoCloseTimer = window.setTimeout(() => {
           gsap.to(pose, {
             lidAngle: 0,
@@ -846,9 +851,6 @@ export function createMonolith(canvas: HTMLCanvasElement) {
             duration: 0.85,
             ease: 'power2.inOut',
           });
-          if (sceneInput.lidOpen !== null && sceneInput.lidOpen > 0) {
-            sceneInput.lidOpen = 0;
-          }
           lidAutoCloseTimer = null;
         }, 5000);
       }
@@ -886,6 +888,23 @@ export function createMonolith(canvas: HTMLCanvasElement) {
       if (sceneInput.status === 'Challenged') {
         shakeStart = seconds - 0.15;
       }
+    }
+
+    // When lid is scrubbed directly via scroll, lerp smoothly at 60fps for zero-jitter continuous motion
+    if (isScrubbingLid) {
+      const targetLidAngle = -derived.lidOpen * 1.16;
+      const targetDeedLift = derived.lidOpen * 0.46;
+      const targetEnvelopeFlap = -derived.envelopeOpen * Math.PI * 0.86;
+      const targetEnvelopeCard = derived.envelopeOpen * 0.24;
+      const targetGleamScale = derived.gleamIntensity > 0.01 ? derived.gleamIntensity : 0.001;
+      const targetGleamLift = derived.gleamIntensity * 0.44;
+
+      pose.lidAngle = THREE.MathUtils.lerp(pose.lidAngle, targetLidAngle, 0.2);
+      pose.deedLift = THREE.MathUtils.lerp(pose.deedLift, targetDeedLift, 0.2);
+      pose.envelopeFlapAngle = THREE.MathUtils.lerp(pose.envelopeFlapAngle, targetEnvelopeFlap, 0.2);
+      pose.envelopeCardLift = THREE.MathUtils.lerp(pose.envelopeCardLift, targetEnvelopeCard, 0.2);
+      pose.gleamScale = THREE.MathUtils.lerp(pose.gleamScale, targetGleamScale, 0.2);
+      pose.gleamLift = THREE.MathUtils.lerp(pose.gleamLift, targetGleamLift, 0.2);
     }
 
     if (sceneInput.outcome !== previousOutcome) {
@@ -992,15 +1011,19 @@ export function createMonolith(canvas: HTMLCanvasElement) {
     }
     root.scale.setScalar(scale * intro.scale);
 
-    // Rotation combines base isometric angle + scroll progress (<= 0.55 rad) + pointer parallax (<= 0.08 rad) + user drag
-    const scrollYaw = Math.max(0, Math.min(1, sceneInput.progress)) * 0.55;
-    const parallaxYaw = Math.max(-0.08, Math.min(0.08, sceneInput.pointerX * 0.16));
-    const parallaxPitch = Math.max(-0.08, Math.min(0.08, sceneInput.pointerY * 0.12));
+    // Rotation combines base isometric angle + smoothed scroll progress + smoothed pointer parallax + user drag
+    const targetScrollYaw = Math.max(0, Math.min(1, sceneInput.progress)) * 0.55;
+    smoothedScrollYaw = THREE.MathUtils.lerp(smoothedScrollYaw, targetScrollYaw, 0.14);
 
-    root.rotation.y = -0.38 + scrollYaw + parallaxYaw + sceneInput.dragYaw;
+    const targetParallaxYaw = Math.max(-0.08, Math.min(0.08, sceneInput.pointerX * 0.16));
+    const targetParallaxPitch = Math.max(-0.08, Math.min(0.08, sceneInput.pointerY * 0.12));
+    smoothedParallaxYaw = THREE.MathUtils.lerp(smoothedParallaxYaw, targetParallaxYaw, 0.1);
+    smoothedParallaxPitch = THREE.MathUtils.lerp(smoothedParallaxPitch, targetParallaxPitch, 0.1);
+
+    root.rotation.y = -0.38 + smoothedScrollYaw + smoothedParallaxYaw + sceneInput.dragYaw;
     root.rotation.x = Math.max(
       -0.6,
-      Math.min(0.6, 0.26 + parallaxPitch + sceneInput.dragPitch),
+      Math.min(0.6, 0.26 + smoothedParallaxPitch + sceneInput.dragPitch),
     );
 
     // Apply animated pose to strongbox mechanisms

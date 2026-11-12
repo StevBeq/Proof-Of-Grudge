@@ -631,7 +631,13 @@ export function Cockpit({ c, locale, onScene, role: roleProp, onRoleChange, scen
       {/* Main Cockpit Split: Left 3D View, Right Data & Actions */}
       <div className="cockpit-main">
         <div className="cockpit-visual">
-          <div className="cockpit-visual-sticky">
+          <div className={`cockpit-visual-sticky role-${role}`}>
+            {/* The Hearing Room Dynamic Ambient Spotlight Stage (Ala ref1.mp4) */}
+            <div className="cockpit-stage-spotlight" aria-hidden="true">
+              <div className="cockpit-spotlight-beam" />
+              <div className="cockpit-spotlight-disc" />
+              <span className="cockpit-spotlight-watermark mono">THE HEARING ROOM // ARBITRATION</span>
+            </div>
             <div id="cockpit-scene" className="scene-anchor" role="img" aria-label={c.scene} />
             {snapshotReady && <div className="cockpit-now">
               <span className="caption">{c.state}</span>

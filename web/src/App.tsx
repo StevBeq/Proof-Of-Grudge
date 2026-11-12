@@ -467,6 +467,20 @@ export default function App() {
       
       {/* 02. Dossier & Mechanism: Forensic Case File Zone with Micro-Grid & Official Stamps */}
       <div className="case-dossier-zone" aria-label="Case Dossier and Mechanism Analysis">
+        {/* Forensic Top Archive Tape Header (Per user Image 4) */}
+        <div className="forensic-archive-tape mono" aria-hidden="true">
+          <span className="tape-cross">+</span>
+          <span className="tape-item">RECORD ARCHIVE // REF: POG-EVIDENCE-2026-T</span>
+          <span className="tape-cross">+</span>
+          <span className="tape-item">JURISDICTION: NEAR TESTNET &amp; ETHEREUM SEPOLIA</span>
+          <span className="tape-cross">+</span>
+          <span className="tape-item">CHAIN SIGNATURES // SECP256K1 DOMAIN 0</span>
+          <span className="tape-cross">+</span>
+          <span className="tape-cross">+</span>
+          <span className="tape-cross">+</span>
+          <span className="tape-cross">+</span>
+        </div>
+
         <div className="forensic-zone-backdrop" aria-hidden="true">
           <div className="forensic-microgrid-pattern" />
 

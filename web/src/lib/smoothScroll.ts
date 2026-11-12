@@ -101,6 +101,17 @@ export function startSceneLoop(frame: (seconds: number) => void, reduced: boolea
   }
   lenis?.on('scroll', ScrollTrigger.update);
   const scroll = () => {
+    const dividerTrack = document.querySelector<HTMLElement>('.chapter-divider-track');
+    if (dividerTrack) {
+      const rect = dividerTrack.getBoundingClientRect();
+      if (rect.top <= 0 && rect.bottom >= window.innerHeight) {
+        return;
+      }
+    }
+    const curtain = document.querySelector<HTMLElement>('.case-curtain');
+    if (curtain) {
+      return;
+    }
     sceneInput.progress =
       window.scrollY / Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
   };
