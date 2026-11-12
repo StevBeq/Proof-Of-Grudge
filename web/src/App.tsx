@@ -520,18 +520,29 @@ export default function App() {
                 <h2>{c.cockpit}</h2>
               </div>
 
-              {/* Spacious 340x340 Dial Frame with 185x185 #divider-scene inside so 3D coins & envelope never touch the ring */}
+              {/* Grand Central Dial Frame with prominent 3D Strongbox inside */}
               <div className="divider-dial-frame">
                 <svg className="divider-dial-svg" viewBox="0 0 340 340" aria-hidden="true">
+                  <defs>
+                    <linearGradient id="divider-gold-red-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#F2A900" />
+                      <stop offset="50%" stopColor="#E23A24" />
+                      <stop offset="100%" stopColor="#D7261E" />
+                    </linearGradient>
+                    <filter id="divider-telemetry-glow" x="-20%" y="-20%" width="140%" height="140%">
+                      <feDropShadow dx="0" dy="0" stdDeviation="3.5" floodColor="#E23A24" floodOpacity="0.75" />
+                      <feDropShadow dx="0" dy="0" stdDeviation="7" floodColor="#F2A900" floodOpacity="0.45" />
+                    </filter>
+                  </defs>
                   <g data-divider-dial-outer>
-                    <circle cx="170" cy="170" r="164" fill="none" stroke="currentColor" strokeWidth="1.2" strokeDasharray="4 8" opacity="0.4" />
+                    <circle cx="170" cy="170" r="164" fill="none" stroke="currentColor" strokeWidth="1.2" strokeDasharray="4 8" opacity="0.35" />
                     <line x1="170" y1="2" x2="170" y2="18" stroke="var(--owner)" strokeWidth="3.5" />
                     <line x1="338" y1="170" x2="322" y2="170" stroke="var(--heir)" strokeWidth="3.5" />
                     <line x1="170" y1="338" x2="170" y2="322" stroke="var(--rival)" strokeWidth="3.5" />
                     <line x1="2" y1="170" x2="18" y2="170" stroke="var(--ink)" strokeWidth="2.5" />
                   </g>
                   <g data-divider-dial-inner>
-                    <circle cx="170" cy="170" r="138" fill="none" stroke="currentColor" strokeWidth="1.1" strokeDasharray="6 8" opacity="0.3" />
+                    <circle cx="170" cy="170" r="138" fill="none" stroke="currentColor" strokeWidth="1.1" strokeDasharray="6 8" opacity="0.25" />
                   </g>
                   <circle
                     cx="170"
@@ -539,7 +550,7 @@ export default function App() {
                     r="156"
                     fill="none"
                     stroke="rgba(22, 19, 13, 0.12)"
-                    strokeWidth="5"
+                    strokeWidth="8"
                   />
                   <circle
                     data-divider-ring-progress
@@ -547,9 +558,10 @@ export default function App() {
                     cy="170"
                     r="156"
                     fill="none"
-                    stroke="var(--rival)"
-                    strokeWidth="5"
+                    stroke="url(#divider-gold-red-grad)"
+                    strokeWidth="8"
                     strokeLinecap="round"
+                    filter="url(#divider-telemetry-glow)"
                     transform="rotate(-90 170 170)"
                   />
                 </svg>
