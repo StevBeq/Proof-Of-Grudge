@@ -8,7 +8,7 @@ web
 
 ## Stack
 
-User-pinned: React 19, Vite, TypeScript, Tailwind 4, vanilla Three.js, GSAP and Lenis. Self-hosted Fontsource fonts. No browser wallet or keys.
+User-pinned: React 19, Vite, TypeScript, Tailwind 4, vanilla Three.js, GSAP and Lenis. Self-hosted Fontsource fonts. Read-only inspection and the local simulator require no browser wallet or keys; optional NEAR wallet connection supports live Testnet vault creation and actor transactions.
 
 ## Users
 

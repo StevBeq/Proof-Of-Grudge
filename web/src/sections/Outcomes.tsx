@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Play, BookOpen, X } from '@phosphor-icons/react';
 import type { Copy } from '../lib/copy';
 import type { Outcome } from '../lib/vaultSimulator';
@@ -75,9 +76,22 @@ export function Outcomes({ c, onPlay }: { c: Copy; onPlay: (outcome: Branch) => 
       </div>
       <p className="caption table-note">H = R = B. {c.pullNote}</p>
 
-      {openRow && (
-        <div className="story-overlay" role="presentation" onClick={e => { if (e.target === e.currentTarget) setOpen(null); }}>
-          <div className="story-panel" ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="story-title">
+      {openRow && createPortal(
+        <div
+          className="story-overlay"
+          data-lenis-prevent="true"
+          role="presentation"
+          onClick={e => { if (e.target === e.currentTarget) setOpen(null); }}
+          onWheel={e => { if (e.target === e.currentTarget) e.preventDefault(); }}
+        >
+          <div
+            className="story-panel"
+            data-lenis-prevent="true"
+            ref={dialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="story-title"
+          >
             <header className="story-head">
               <span className="case-kicker">{c.howToPlay}</span>
               <h3 id="story-title" className={`actor-${openRow.actor}`}>{openRow.name}</h3>
@@ -98,7 +112,8 @@ export function Outcomes({ c, onPlay }: { c: Copy; onPlay: (outcome: Branch) => 
               <button type="button" className="button-secondary" onClick={() => setOpen(null)}>{c.close}</button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </section>
   );

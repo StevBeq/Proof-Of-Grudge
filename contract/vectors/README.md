@@ -2,29 +2,23 @@
 
 ## Current status
 
-`eip1559.inputs.json` contains the three source cases. The generator and Rust
-comparison test are implemented but have not been executed. There is deliberately
-**no `eip1559.generated.json` yet**: no bytes have been represented as viem output.
-The independently hand-derived unit-test expectations in `src/eth_rlp.rs` are not
-viem golden vectors.
+`eip1559.inputs.json` contains the three source cases, and `eip1559.generated.json` is generated and committed using `viem@2.57.19`. Both `npm run vectors:check` and `cargo test --test rlp_golden` verify byte-per-byte parity.
 
-## Generate when execution is authorized
+## Regenerate locally
 
-From `contract/`:
+From `contract/` (or via root workspace scripts):
 
-1. `npm install` → installs exactly `viem@2.38.5` and creates a package lock.
+1. `npm install` → installs pinned `viem@2.57.19` and updates the root lockfile.
    Installation needs npm registry access; generation itself requires no network.
 2. `npm run vectors` → writes `vectors/eip1559.generated.json` with actual viem
    unsigned serialization, the installed viem version, serializer/generator
    provenance, and a copy of the source inputs.
 3. `npm run vectors:check` → recomputes using viem and compares the complete file
-   without writing it; missing/stale/modified output fails.
+   without writing it (LF-normalized); missing/stale/modified output fails.
 4. `cargo test --test rlp_golden` → compares every Rust preimage byte-for-byte to
    the generated reference. Missing output fails with explicit instructions.
 
-Commit the generated fixture rather than ignoring it. Commit the npm package lock
-as part of the authorized dependency-installation work for transitive dependency
-reproducibility. Neither file was generated during this implementation-only task.
+Commit the generated fixture rather than ignoring it.
 
 The main contract crate must be named `proof_of_grudge` and export
 `pub mod eth_rlp;` from its library. The integration test uses
@@ -50,11 +44,7 @@ or signing services, and it does not broadcast transactions.
 
 ## Reference provenance
 
-The exact version was verified through npm metadata (read-only HTTP retrieval):
-https://registry.npmjs.org/viem/2.38.5
+The exact version is resolved from the npm registry:
+https://registry.npmjs.org/viem/2.57.19
 
-The published serializer implementation was inspected at:
-https://unpkg.com/viem@2.38.5/_esm/utils/transaction/serializeTransaction.js
-
-A verified package version and inspected source are not proof of executed vector
-generation. Only running the generator produces the missing viem reference file.
+Using `viem`'s `serializeTransaction` implementation (`type: 'eip1559'`).

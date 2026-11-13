@@ -26,7 +26,7 @@ The contract operates under a zero-trust model between three actors:
 
 ## 2. Cryptographic Immutability: Zero Access Keys Audit
 
-On Day 6 deployment, the contract initialization and deployment are executed in a single atomic batch, after which the deployer's Full-Access Key is permanently deleted.
+Contract deployment and `init` were executed atomically in a single batch transaction ([`AkyXh4z9...Ny57B`](https://testnet.nearblocks.io/txns/AkyXh4z9HBYNSYezLWg8cvj8WQLyt5xawZj7UAqNy57B)), after which the account's `FullAccess` key was permanently deleted in transaction [`8itgVeVs...cDCu`](https://testnet.nearblocks.io/txns/8itgVeVsiS42DVpTW5LxzdSUpFj1bZkFEshFh2a5cDCu), leaving zero access keys on-chain.
 
 Verify this live on NEAR Testnet via fastnear RPC:
 

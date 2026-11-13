@@ -2,7 +2,7 @@
   "schema_version": 1,
   "provenance": {
     "library": "viem",
-    "version": "2.38.5",
+    "version": "2.57.19",
     "serializer": "serializeTransaction",
     "generator": "vectors/generate.mjs"
   },

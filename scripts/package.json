@@ -16,7 +16,7 @@
     "@noble/curves": "1.9.1",
     "bs58": "6.0.0",
     "near-api-js": "6.5.1",
-    "viem": "2.57.16"
+    "viem": "2.57.19"
   },
   "devDependencies": {
     "@types/node": "22.19.0",

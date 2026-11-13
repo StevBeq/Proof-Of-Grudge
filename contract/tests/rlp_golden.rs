@@ -44,7 +44,7 @@ fn unsigned_eip1559_matches_pinned_viem_byte_for_byte() {
     let inputs = read_json(&directory.join("eip1559.inputs.json"));
     assert_eq!(fixture["schema_version"], 1, "Unknown fixture schema");
     assert_eq!(fixture["provenance"]["library"], "viem");
-    assert_eq!(fixture["provenance"]["version"], "2.38.5");
+    assert_eq!(fixture["provenance"]["version"], "2.57.19");
     assert_eq!(fixture["provenance"]["serializer"], "serializeTransaction");
     assert_eq!(fixture["provenance"]["generator"], "vectors/generate.mjs");
     assert_eq!(fixture["inputs"], inputs, "Stale fixture inputs. {GENERATE}");

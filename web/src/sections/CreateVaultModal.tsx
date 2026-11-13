@@ -211,18 +211,6 @@ export function CreateVaultModal({
                   </p>
                 </div>
               </div>
-              <div className="wallet-required-actions">
-                <button
-                  type="button"
-                  className="actor-button button-owner"
-                  onClick={() => {
-                    onConnectWallet?.();
-                  }}
-                >
-                  <Wallet size={16} />
-                  <span>{c.connectWallet}</span>
-                </button>
-              </div>
             </div>
           ) : step === 'form' ? (
             <>
@@ -240,22 +228,22 @@ export function CreateVaultModal({
                   </div>
                 </div>
 
-                <div className="form-grid-3">
-                  <div className="form-field">
-                    <label className="caption">
-                      <span className="actor-dot dot-owner" />
-                      <strong>{c.vaultOwner}</strong>
-                      <span className="connected-pill">✓ CONNECTED</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={owner}
-                      readOnly
-                      disabled
-                      className="form-input mono input-locked"
-                    />
-                  </div>
+                <div className="form-field">
+                  <label className="caption">
+                    <span className="actor-dot dot-owner" />
+                    <strong>{c.vaultOwner}</strong>
+                    <span className="connected-pill">✓ CONNECTED</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={owner}
+                    readOnly
+                    disabled
+                    className="form-input mono input-locked"
+                  />
+                </div>
 
+                <div className="form-grid-2">
                   <div className="form-field">
                     <label className="caption">
                       <span className="actor-dot dot-heir" />

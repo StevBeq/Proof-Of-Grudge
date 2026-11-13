@@ -16,6 +16,17 @@ if (process.platform === 'win32' && existsSync(resolve(portableNasm, 'nasm.exe')
   const pathKey = Object.keys(env).find(key => key.toLowerCase() === 'path') ?? 'Path';
   env[pathKey] = portableNasm + delimiter + (env[pathKey] ?? '');
 }
+if (command === 'build') {
+  const probe = spawnSync('cargo', ['near', '--version'], { cwd: root, env, stdio: 'ignore' });
+  if (probe.status !== 0) {
+    console.error(
+      'Missing cargo-near (v0.23.0 required for contract WASM builds).\n' +
+      'Install prebuilt cargo-near v0.23.0 from https://github.com/near/cargo-near/releases/tag/cargo-near-v0.23.0 ' +
+      '(with rustup target wasm32-unknown-unknown), or run: cargo install cargo-near --version 0.23.0 --locked',
+    );
+    process.exit(1);
+  }
+}
 const args = command === 'test'
   ? ['test', '--locked', '--manifest-path', 'contract/Cargo.toml', '--', '--nocapture']
   : ['near', 'build', 'non-reproducible-wasm', '--locked', '--manifest-path', 'contract/Cargo.toml',

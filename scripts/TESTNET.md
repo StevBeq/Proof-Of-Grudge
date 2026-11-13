@@ -4,16 +4,16 @@ This is faucet-funded test infrastructure on NEAR Testnet. The vault contract's 
 
 ## Observed validation
 
-- `npm test`: 41 Rust unit tests, 1 viem golden-vector test, 33 CLI/setup tests and 32 web tests pass.
+- `npm test`: 41 Rust unit tests, 1 viem golden-vector test, 33 CLI/setup tests and 33 web tests pass.
 - `npm run typecheck`: CLI and web checks pass.
 - `npm run build:contract`: optimized WASM with embedded ABI, **196,109 bytes**.
 - Vite production build passed with `envDir: false` (no secret-file loading); it still reports a large-chunk warning. The local inspector has public-only configuration; UI design was not changed in this phase.
-- An isolated empty workspace completed `npm ci` using npm 11.6.2 and the lockfile. The npm audit reports 11 low, 1 moderate and 1 high finding; no forced major dependency upgrades were applied. This is not a security audit or a full clean-clone build/test run.
+- `npm ci` runs cleanly against the lockfile. Updating `viem` to `2.57.19` resolves the prior high/moderate `ws` advisories (`0` moderate/high/critical remaining; 11 low findings remain in `near-api-js@6.5.1` / `elliptic` without forcing a breaking major SDK upgrade).
 - WASM SHA-256: `f254791a926540c2f4991387a72b35ba97120fed5cb57fdd80505318084b9592`.
 - NEAR code hash (base58): `HJxNXviRSeAYdzuNMFMxarNbxF3QGd5jhsHK9VGB4oWH`.
-- Both vaults below were deployed and initialized in one batch transaction.
+- Both vaults below were deployed and initialized in one batch transaction, and `pog-mw835qrr-1c82b2-vault.testnet`'s FullAccess key was deleted in `8itgVeVsiS42DVpTW5LxzdSUpFj1bZkFEshFh2a5cDCu`.
 - All four native payoff branches completed, including payout transfer receipts and cleared in-flight slots. An Idle owner asset withdrawal also completed on the second vault.
-- Live MPC signing via 1.signer-prod.testnet successfully executed with domain-0 Secp256k1 key, verifying the official payload_v2 wire format on Testnet.
+- Live MPC signing via `v1.signer-prod.testnet` successfully executed with domain-0 Secp256k1 key, verifying the official payload_v2 wire format on Testnet.
 - Sepolia broadcast confirmed on chain ID **11155111**, transferring 0.001 ETH to the locked heir recipient with block confirmation on Sepolia Etherscan.
 
 The local date and chain timestamps can differ by timezone. Proof links and chain block data, not a local clock, are the source of truth. Clean-clone reproduction and Sandbox fault injection have not been executed. Official Sandbox supports Linux and supported macOS, not Windows native; this host has no configured Linux distribution or Docker runtime.

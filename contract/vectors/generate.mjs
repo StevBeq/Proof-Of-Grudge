@@ -4,7 +4,7 @@ import { createRequire } from 'node:module';
 import { serializeTransaction } from 'viem';
 
 const require = createRequire(import.meta.url);
-const pinnedVersion = '2.38.5';
+const pinnedVersion = '2.57.19';
 const installedVersion = require('viem/package.json').version;
 assert.equal(installedVersion, pinnedVersion, 'Install the exact pinned viem version');
 assert.ok(

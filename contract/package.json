@@ -11,6 +11,6 @@
     "vectors:check": "node vectors/generate.mjs --check"
   },
   "devDependencies": {
-    "viem": "2.38.5"
+    "viem": "2.57.19"
   }
 }
