@@ -101,11 +101,21 @@ export function FooterLoop({
   const pctBadgeRef = useRef<HTMLElement>(null);
   const wipeCurtainRef = useRef<HTMLDivElement>(null);
   const loopingRef = useRef(false);
+  const splitShownAtRef = useRef(0);
+  const loopDelayTimerRef = useRef<number | null>(null);
 
   const [activeHint, setActiveHint] = useState<string | null>(null);
 
+  const clearPendingLoopTimer = useCallback(() => {
+    if (loopDelayTimerRef.current !== null) {
+      window.clearTimeout(loopDelayTimerRef.current);
+      loopDelayTimerRef.current = null;
+    }
+  }, []);
+
   const runSmoothLoop = useCallback(() => {
     if (loopingRef.current) return;
+    clearPendingLoopTimer();
     loopingRef.current = true;
 
     // Immediately lock Lenis so it stops processing downward wheel inertia
@@ -113,6 +123,7 @@ export function FooterLoop({
 
     const wipe = wipeCurtainRef.current;
     if (!wipe || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      splitShownAtRef.current = 0;
       resetScrollToTopImmediate();
       onLoopToTop();
       window.setTimeout(() => {
@@ -149,6 +160,7 @@ export function FooterLoop({
       ease: 'expo.inOut',
       onComplete: () => {
         // 2. Reset both Lenis and native scroll to 0 while covered, then trigger top portal
+        splitShownAtRef.current = 0;
         if (progressFillRef.current) progressFillRef.current.style.width = '0%';
         if (pctBadgeRef.current) pctBadgeRef.current.textContent = '00%';
         resetScrollToTopImmediate();
@@ -166,7 +178,7 @@ export function FooterLoop({
       },
       '+=0.16',
     );
-  }, [onLoopToTop]);
+  }, [clearPendingLoopTimer, onLoopToTop]);
 
   useEffect(() => {
     const track = trackRef.current;
@@ -179,13 +191,28 @@ export function FooterLoop({
     if (!track || !stage || !gWrap || !eWrap || !midLetters) return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
+    splitShownAtRef.current = 0;
+    clearPendingLoopTimer();
+
+    let isRefreshing = false;
+    const onRefreshInit = () => {
+      isRefreshing = true;
+    };
+    const onRefreshDone = () => {
+      isRefreshing = false;
+    };
+    ScrollTrigger.addEventListener('refreshInit', onRefreshInit);
+    ScrollTrigger.addEventListener('refresh', onRefreshDone);
+
     const ctx = gsap.context(() => {
       const midBlocks = gsap.utils.toArray<HTMLElement>('[data-mid-letter]', midLetters);
 
       // Letters: [G] and [E] locked close together in the center around Gold H caliper
       gsap.set(gWrap, { xPercent: -50, yPercent: -50, x: -82, scale: 1 });
       gsap.set(eWrap, { xPercent: -50, yPercent: -50, x: 82, scale: 1 });
-      if (centerSeal) gsap.set(centerSeal, { xPercent: -50, yPercent: -50, scale: 1, opacity: 1 });
+      if (centerSeal) {
+        gsap.set(centerSeal, { xPercent: -50, yPercent: -50, scale: 1, rotate: 0, opacity: 1 });
+      }
       gsap.set(midBlocks, { scale: 0.5, opacity: 0, y: 24 });
 
       const tl = gsap.timeline({
@@ -193,9 +220,26 @@ export function FooterLoop({
           trigger: track,
           start: 'top top',
           end: 'bottom bottom',
-          scrub: 0.35,
+          scrub: 0.16,
+          invalidateOnRefresh: true,
+          onLeaveBack: () => {
+            clearPendingLoopTimer();
+            splitShownAtRef.current = 0;
+            if (progressFillRef.current) progressFillRef.current.style.width = '0%';
+            if (pctBadgeRef.current) pctBadgeRef.current.textContent = '00%';
+          },
           onUpdate: self => {
-            if (loopingRef.current) return;
+            if (loopingRef.current || isRefreshing) return;
+
+            // Ignore stale triggers when the footer curtain hasn't actually reached the viewport top
+            if (track.getBoundingClientRect().top > 12) {
+              clearPendingLoopTimer();
+              splitShownAtRef.current = 0;
+              if (progressFillRef.current) progressFillRef.current.style.width = '0%';
+              if (pctBadgeRef.current) pctBadgeRef.current.textContent = '00%';
+              return;
+            }
+
             const p = self.progress;
             const pct = Math.min(100, Math.round(p * 100));
 
@@ -205,14 +249,51 @@ export function FooterLoop({
             if (pctBadgeRef.current) {
               pctBadgeRef.current.textContent = `${String(pct).padStart(2, '0')}%`;
             }
-            if (p >= 0.985 && !loopingRef.current) {
-              runSmoothLoop();
+
+            if (p >= 0.54 && splitShownAtRef.current === 0) {
+              splitShownAtRef.current = performance.now();
+            }
+
+            if (p < 0.88) {
+              clearPendingLoopTimer();
+              if (p < 0.12) {
+                splitShownAtRef.current = 0;
+              }
+              return;
+            }
+
+            if (p >= 0.985 && self.isActive && self.direction >= 0) {
+              const elapsedSinceSplit =
+                splitShownAtRef.current > 0 ? performance.now() - splitShownAtRef.current : 0;
+              const minDisplayMs = 750;
+
+              if (splitShownAtRef.current > 0 && elapsedSinceSplit >= minDisplayMs) {
+                clearPendingLoopTimer();
+                runSmoothLoop();
+              } else if (loopDelayTimerRef.current === null) {
+                // If user scrolled straight to bottom in one impulse, let the letter-separation
+                // showcase remain visible briefly before starting the return loop wipe.
+                if (splitShownAtRef.current === 0) {
+                  splitShownAtRef.current = performance.now();
+                }
+                const waitMs = Math.max(220, minDisplayMs - elapsedSinceSplit);
+                loopDelayTimerRef.current = window.setTimeout(() => {
+                  loopDelayTimerRef.current = null;
+                  if (
+                    !loopingRef.current &&
+                    self.progress >= 0.95 &&
+                    track.getBoundingClientRect().top <= 12
+                  ) {
+                    runSmoothLoop();
+                  }
+                }, waitMs);
+              }
             }
           },
         },
       });
 
-      // [G] and [E] CAD calipers pull apart to outer flanks, revealing R - U - D - G
+      // Phase 1 (0.00 -> 0.52): [G] and [E] CAD calipers pull apart, revealing R - U - D - G
       tl.to(
         gWrap,
         {
@@ -255,16 +336,42 @@ export function FooterLoop({
           scale: 1,
           opacity: 1,
           y: 0,
-          stagger: { each: 0.045, from: 'center' },
+          stagger: { each: 0.04, from: 'center' },
           ease: 'back.out(1.35)',
-          duration: 0.4,
+          duration: 0.36,
         },
-        0.1,
+        0.12,
       );
+
+      // Phase 2 (0.52 -> 1.00): Keep "G R U D G E" cleanly displayed before the loop wipe triggers
+      tl.to({}, { duration: 0.48 }, 0.52);
     }, track);
 
-    return () => ctx.revert();
-  }, [runSmoothLoop]);
+    // Keep footer trigger bounds accurate whenever dynamic height above it changes
+    let refreshRaf = 0;
+    const mainEl = track.closest('main');
+    const resizeObserver =
+      typeof ResizeObserver !== 'undefined' && mainEl
+        ? new ResizeObserver(() => {
+            if (refreshRaf) window.cancelAnimationFrame(refreshRaf);
+            refreshRaf = window.requestAnimationFrame(() => {
+              ScrollTrigger.refresh();
+            });
+          })
+        : null;
+    if (resizeObserver && mainEl) {
+      resizeObserver.observe(mainEl);
+    }
+
+    return () => {
+      clearPendingLoopTimer();
+      if (refreshRaf) window.cancelAnimationFrame(refreshRaf);
+      resizeObserver?.disconnect();
+      ScrollTrigger.removeEventListener('refreshInit', onRefreshInit);
+      ScrollTrigger.removeEventListener('refresh', onRefreshDone);
+      ctx.revert();
+    };
+  }, [clearPendingLoopTimer, runSmoothLoop]);
 
   const triggerCaliperPulse = (name: string, info: string) => {
     setActiveHint(info);

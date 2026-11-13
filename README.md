@@ -39,6 +39,10 @@ Inspect Proof-of-Grudge from zero-install read-only RPC checks up to a full cros
    # Inspect deployed contract code_hash
    curl -s https://test.rpc.fastnear.com -H 'Content-Type: application/json' \
      -d '{"jsonrpc":"2.0","id":1,"method":"query","params":{"request_type":"view_account","finality":"final","account_id":"pog-mw835qrr-1c82b2-vault.testnet"}}'
+
+   # Inspect settled vault state (Finalized / SpiteBackfired)
+   curl -s https://test.rpc.fastnear.com -H 'Content-Type: application/json' \
+     -d '{"jsonrpc":"2.0","id":1,"method":"query","params":{"request_type":"call_function","finality":"final","account_id":"pog-mw835qrr-1c82b2-vault.testnet","method_name":"get_vault_state","args_base64":"e30="}}'
    ```
 3. **Offline CLI State Machine, cross-shell (Node >= 22.15.1):** Works identically in **PowerShell 7, `cmd.exe`, Git Bash, bash, and zsh**:
    ```bash
@@ -46,7 +50,7 @@ Inspect Proof-of-Grudge from zero-install read-only RPC checks up to a full cros
    npx tsx scripts/run-demo.ts --dry-run --scenario spite
    ```
    Prints structured JSON (`Simulated: off-chain state machine`, `network_requests: 0`, `status: Finalized`, `last_outcome: SpiteBackfired`, `Heir` credited `7 NEAR`).
-4. **Full Build & All 4 Test Suites (`108` checks):** After installing the prerequisites listed below, run `npm test && npm run typecheck && npm run build`.
+4. **Full Build & Test Suite (`108` test cases + `vectors:check`):** After installing the prerequisites listed below, run `npm test && npm run typecheck && npm run build`.
 
 ---
 
@@ -109,7 +113,7 @@ Once finalized, the NEAR contract constructs an EIP-1559 payload locked to the i
 | :--- | :--- |
 | **Clone & install**<br>`git clone https://github.com/StevBeq/Proof-Of-Grudge.git && cd Proof-Of-Grudge && npm install` | Workspaces (`contract`, `scripts`, `web`) resolve cleanly against `package-lock.json`; `npm audit --audit-level=moderate` exits `0` (`0` moderate/high/critical advisories). |
 | **Verify RLP golden vectors**<br>`npm run vectors:check` | Prints `eip1559.generated.json matches pinned viem serialization` (LF-normalized cross-platform via `.gitattributes`). |
-| **Run all test suites**<br>`npm test` | **108 tests pass** across `vectors:check`, 42 contract tests (41 unit + 1 RLP golden vector), 33 CLI tests, and 33 web tests. |
+| **Run all test suites**<br>`npm test` | Runs `vectors:check` parity gate plus **108 test cases** (42 contract: 41 unit + 1 RLP golden vector, 33 CLI, 33 web). |
 | **Run Rust contract suite directly**<br>`cargo test --manifest-path contract/Cargo.toml` | `42 passed` (41 unit + 1 golden vector matching `viem 2.57.19` byte-for-byte). *(Line-coverage tooling is not configured.)* |
 | **Build contract WASM + Web UI**<br>`npm run build` | Builds `contract/target/near/proof_of_grudge.wasm` (196,109 bytes with embedded ABI) and `web/dist/` production bundle. |
 | **Run offline CLI dry-run (all shells)**<br>`npx tsx scripts/run-demo.ts --dry-run --scenario spite` | Formatted JSON (`Simulated: off-chain state machine`, `network_requests: 0`, `Finalized`, `SpiteBackfired`, `Heir` credited `7 NEAR`). Also works via `npm run demo -- --dry-run --scenario spite` in `cmd.exe`/POSIX shells. |
@@ -136,7 +140,7 @@ Deployed on **NEAR Testnet** and verified across all four payoff branches, plus 
 | **MPC Sign Request (NEAR)** | [`3YjwuYyE...bTDu`](https://testnet.nearblocks.io/txns/3YjwuYyEAAVxLKt8mJqkchnXvPdYVnkBAjACsCFYbTDu) | `12.87 TGas` (`0.001198 NEAR`, 8 receipts) | `v1.signer-prod.testnet`, `DomainId(0)`, `eth_signature_ready` |
 | **Sepolia ETH Release (EVM)** | [`0xc703affa...af758`](https://sepolia.etherscan.io/tx/0xc703affa31096138523f3f7ce40a442552ab08d41ff63e9b756ce479da5af758) | `204,600 gas @ 72 wei` (`14,731,200 wei` fee) | `0.001 ETH` to locked Heir `0x8A06B01bfbf997B7361AFF7886633e5396691a17`, status `0x1`, block `12095656` |
 
-See [`scripts/TESTNET.md`](scripts/TESTNET.md) for the complete ledger of transactions, including the second Testnet vault (`pog-mw83onmu-af46c1-vault.testnet`) covering Branch C (`Uncontested`) and Idle `owner_withdraw_near`.
+See [`scripts/TESTNET.md`](scripts/TESTNET.md) for the complete ledger of transactions, including the auxiliary demo vault (`pog-mw83onmu-af46c1-vault.testnet`, which covers Branch C `Uncontested` / `owner_withdraw_near` and retains its setup key + testnet funding; only the main vault `pog-mw835qrr-1c82b2-vault.testnet` has zero keys `keys: []`).
 
 ---
 
