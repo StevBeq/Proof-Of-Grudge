@@ -10,7 +10,6 @@
 
 <p align="center">
   <a href="https://proof-of-grudge.vercel.app"><img src="https://img.shields.io/badge/Live%20App-proof--of--grudge.vercel.app-00EC97?style=flat-square&logo=vercel" alt="Live App" /></a>
-  <a href="https://nearhackathon.com"><img src="https://img.shields.io/badge/NEAR%20Hackathon-Track%2013%3A%20Open%20Innovation-orange?style=flat-square" alt="Track" /></a>
   <a href="https://github.com/StevBeq/Proof-Of-Grudge/actions/workflows/ci.yml"><img src="https://github.com/StevBeq/Proof-Of-Grudge/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
   <a href="https://github.com/StevBeq/Proof-Of-Grudge"><img src="https://img.shields.io/badge/contract%20tests-42%20passed-2ea44f?style=flat-square" alt="Contract Tests" /></a>
   <a href="https://github.com/StevBeq/Proof-Of-Grudge"><img src="https://img.shields.io/badge/cli%20tests-33%20passed-2ea44f?style=flat-square" alt="CLI Tests" /></a>
@@ -19,7 +18,7 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" alt="License" /></a>
 </p>
 
-[Live Web App](https://proof-of-grudge.vercel.app) · [For Judges (Quick Verification)](#for-judges-quick-verification) · [Live Testnet Evidence](#live-near-testnet--sepolia-evidence) · [Security Policy](SECURITY.md) · *Video Demo on X: pending final recording*
+[Video Demo on X](https://x.com/BebeqKun/status/2121418623499866480) · [For Judges (Quick Verification)](#for-judges-quick-verification) · [Live Testnet Evidence](#live-near-testnet--sepolia-evidence) · [Security Policy](SECURITY.md)
 
 </div>
 
@@ -173,7 +172,6 @@ Let **A** be the accounted native NEAR vault assets and **B** the required bond 
 - **Testnet demo timers & coverage tooling:** The deployed Testnet vaults use short demonstration intervals (`15s` heartbeat, `90s` grace, `90s` challenge extension) so full lifecycle transitions can run live; `cargo test` passes 42 tests, while automated line-coverage instrumentation is not configured.
 - **No on-chain Sepolia state reader:** The NEAR contract signs destination-locked EIP-1559 payloads deterministically, but cannot query Sepolia balance, nonce, or confirmation receipts on-chain. Repeated calls to `request_eth_release` after settlement update the stored signature without revoking earlier valid nonces.
 - **Zero-custody EVM boundary:** If the Heir loses access to their pre-registered `heir_eth_address` key, the contract has no admin recovery path to change it.
-- **Video demo link:** Kept as pending upload at the top bar while final recording is being prepared.
 
 ---
 
